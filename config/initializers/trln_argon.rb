@@ -28,7 +28,12 @@ TrlnArgon::Engine.configure do |config|
   apply_local_configuration(config, 'allow_tracebacks')
 
   mappings_dir = config.argon_code_mappings_dir.to_s
-  mappings_dir = File.join(mappings_dir, 'argon_mappings') unless File.basename(mappings_dir) == 'argon_mappings'
+  mappings_root = TrlnArgon::Engine.root.join('config', 'mappings').to_s
+  mappings_candidates = []
+  mappings_candidates << mappings_dir if File.basename(mappings_dir) == 'argon_mappings'
+  mappings_candidates << File.join(mappings_dir, 'argon_mappings')
+  mappings_candidates << File.join(mappings_root, 'argon_mappings')
+  mappings_dir = mappings_candidates.find { |path| File.directory?(path) } || mappings_candidates.last
 
   TrlnArgon::LookupManager.fetcher = TrlnArgon::MappingsGitFetcher.new(
     repo_dir: mappings_dir
