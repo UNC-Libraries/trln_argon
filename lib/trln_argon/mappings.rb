@@ -1,5 +1,6 @@
 require 'git'
 require 'singleton'
+require 'fileutils'
 
 module TrlnArgon
   module Loggable
@@ -24,7 +25,14 @@ module TrlnArgon
       @repo_dir = File.join(@repo_base, REPO_NAME)
       begin
         @url = options[:git_url] || ::Rails.configuration.code_mappings[:git_url]
+
+        # Some versions of
+        # the git gem return full ref names like "refs/heads/main" instead of just
+        # "main", which caused .find below to always return nil, ultimately passing
+        # nil to Git#checkout and corrupting the HEAD file.
         remote_branches = Git.ls_remote(@url)['branches'].keys
+                                                         .map { |b| b.sub('refs/heads/', '') }
+
         if options[:branch]
           logger.info("Using '#{options[:branch]}' branch for mappings")
           @branch = options[:branch]
@@ -32,13 +40,25 @@ module TrlnArgon
           @branch = DEFAULT_BRANCHES.find { |b| remote_branches.include?(b) }
         end
 
+        # If .find returns nil (e.g. because no DEFAULT_BRANCHES matched), the original code would silently
+        # pass nil to Git#checkout, which writes a binary HEAD file and causes
+        # the "no candidates for merging" error on the next pull. Fall back to
+        # 'main' and log an error instead.
+        if @branch.nil?
+          logger.error("Could not determine a valid branch from remote. " \
+                         "Remote branches found: #{remote_branches.inspect}. " \
+                         "Falling back to 'main'.")
+          @branch = 'main'
+        end
+
         unless remote_branches.include?(@branch)
-          logger.error("The repository at #{@url} "\
-            "does not contain a branch named '#{@branch}:\n\n"\
-            "we only found #{remote_branches}")
+          logger.error("The repository at #{@url} does not contain a branch " \
+                         "named '#{@branch}'. We only found: #{remote_branches}")
         end
       rescue NoMethodError
         @url = GIT_URL
+        # Use ||= so an explicitly supplied branch option is not overwritten when falling into the rescue path.
+        @branch ||= 'main'
         logger.error('Unable to find configuration key `mappings_git_url`')
         logger.error('You need to specify this in the configuration file')
         logger.error("for your environment e.g. config/#{::Rails.env}.rb")
@@ -48,36 +68,66 @@ module TrlnArgon
 
     def clone
       logger.info("Initial clone of code mappings from #{@url} to #{@repo_base}")
-      @git = Git.clone(@url, REPO_NAME, path: @repo_base)
-      @git.checkout(@branch)
+
+      # Remove any existing incomplete or corrupted directory before
+      # cloning. Git#clone will not clone into a non-empty existing directory.
+      FileUtils.rm_rf(@repo_dir)
+
+      # CHANGED: Pass the branch to clone so the desired branch is checked out
+      # during the initial clone.
+      @git = Git.clone(
+        @url,
+        REPO_NAME,
+        path: @repo_base,
+        branch: @branch
+      )
     end
 
-    # refreshes the contents of the repository from origin;
-    # has checks to short circuit this if we're pulling too often
-    # and not changing branches.
     # rubocop:disable Metrics/PerceivedComplexity
     def refresh
-      if File.directory?(File.join(@repo_dir, '.git'))
+      git_directory = File.join(@repo_dir, '.git')
+
+      if File.directory?(git_directory)
         logger.debug("Repository #{@repo_dir} appears to be a .git repo")
-        @git ||= Git.open(@repo_dir)
 
-        head_fetch_file = File.join(@repo_dir, '.git', 'FETCH_HEAD')
+        begin
+          # Git.open can raise ArgumentError when the directory contains
+          # a damaged or incomplete .git directory. This must be inside the rescue
+          # block; otherwise the existing rescue around fetch does not catch it.
+          @git ||= Git.open(@repo_dir)
 
-        # if we're not changing branches and we're within 2 minutes
-        # of our last changes, don't bother pulling new ones.
-        # Otherwise: pull down changes
-        do_pull = if File.exist?(head_fetch_file)
-                    File.stat(head_fetch_file).mtime < (Time.now - 2.minutes) && @git.current_branch == @branch
-                  else
-                    true
-                  end
+          head_fetch_file = File.join(git_directory, 'FETCH_HEAD')
 
-        if do_pull
-          logger.info("Pulling changes from #{@url}/#{@branch} to #{@repo_dir}")
-          @git.pull('origin', @branch)
-          @git.checkout(@branch)
-        else
-          logger.debug("Not pulling changes from #{@url} because it was updated in the last 2 minutes")
+          do_fetch = if File.exist?(head_fetch_file)
+                       File.stat(head_fetch_file).mtime < (Time.now - 2.hours)
+                     else
+                       true
+                     end
+
+          if do_fetch
+            logger.info("Fetching changes from #{@url}/#{@branch} to #{@repo_dir}")
+
+            # Use fetch and reset instead of pull. This avoids the merge
+            # step that produced "There are no candidates for merging."
+            @git.fetch('origin')
+            @git.checkout(@branch)
+            @git.reset_hard("origin/#{@branch}")
+          else
+            logger.debug(
+              "Skipping fetch because #{@repo_dir} was updated within the last 2 hours"
+            )
+          end
+        rescue ArgumentError, Git::GitExecuteError => e
+          # CHANGED: Catch ArgumentError from Git.open as well as git command
+          # failures. An existing .git directory is not necessarily a valid
+          # working tree.
+          logger.error(
+            "Git repository is invalid or refresh failed: #{e.message}. " \
+              'Removing it and cloning again.'
+          )
+
+          @git = nil
+          clone
         end
       else
         clone
