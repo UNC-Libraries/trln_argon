@@ -27,21 +27,15 @@ TrlnArgon::Engine.configure do |config|
   apply_local_configuration(config, 'enable_query_truncation')
   apply_local_configuration(config, 'allow_tracebacks')
 
-  mappings_options = {
-    git_url: 'https://github.com/trln/argon_code_mappings',
-    repo_base: config.argon_code_mappings_dir
-  }
+  mappings_dir = config.argon_code_mappings_dir.to_s
+  mappings_dir = File.join(mappings_dir, 'argon_mappings') unless File.basename(mappings_dir) == 'argon_mappings'
 
-  # set this env var if you want to test changes without
-  # having to use the default branch
+  TrlnArgon::LookupManager.fetcher = TrlnArgon::MappingsGitFetcher.new(
+    repo_dir: mappings_dir
+  )
 
-  mappings_options[:branch] = ENV['ARGON_MAPPINGS_BRANCH'] if ENV.key?('ARGON_MAPPINGS_BRANCH')
-
-  git_fetcher = TrlnArgon::MappingsGitFetcher.new(mappings_options)
-
-  TrlnArgon::LookupManager.fetcher = git_fetcher
-  # do a lookup so the mappings are initialized.
-  TrlnArgon::LookupManager.instance.map('ncsu.library.DHHILL')
+  # Initialize the local mappings using a UNC location from config/mappings/argon_mappings/unc.
+  TrlnArgon::LookupManager.instance.map('unc.loc_b.d@')
 end
 
 # Configure paging defaults
