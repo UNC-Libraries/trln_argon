@@ -25,6 +25,7 @@ Gem::Specification.new do |s|
   # significantly enough that it doesn't work for us.
   s.add_dependency 'blacklight-hierarchy', '~> 6.3', '< 6.6.0'
   s.add_dependency 'blacklight_range_limit', '~> 9.0'
+  s.add_dependency 'dartsass-sprockets'
   s.add_dependency 'git', '>= 1.11.0', "< 2"
   s.add_dependency 'rails_autolink', '~> 1.1'
   s.add_dependency 'library_stdnums', '~> 1.6'
@@ -44,36 +45,13 @@ Gem::Specification.new do |s|
   s.add_development_dependency 'capybara', '~> 3.29'
   s.add_development_dependency 'pry', '~> 0.14'
   s.add_development_dependency 'rubocop', '~> 1.0'
-  s.add_development_dependency 'rubocop-rspec', '~> 2.5'
+  s.add_development_dependency 'rubocop-capybara', '~> 3.0'
+  s.add_development_dependency 'rubocop-factory_bot', '~> 2.28'
+  s.add_development_dependency 'rubocop-rspec', '~> 3.0'
+  s.add_development_dependency 'rubocop-rspec_rails', '~> 2.32'
   s.add_development_dependency 'webmock', '~> 3.7'
   s.add_development_dependency 'vcr', '~> 6.0'
-  s.add_development_dependency 'engine_cart', '~> 2.2'
+  s.add_development_dependency 'engine_cart', '~> 2.6'
   s.add_development_dependency 'listen'
   s.add_development_dependency 'rake', '~> 13'
-
-  # Ruby 3.x compatibility: some gems and their dependencies need to be
-  # pinned to specific versions to work with different Ruby 3.x versions
-
-  # Ruby 3.0
-  # =================
-  if Gem::Requirement.new('< 3.1').satisfied_by?(Gem::Version.new(RUBY_VERSION))
-    s.add_dependency 'sqlite3', '< 1.7'
-
-    s.add_dependency 'dartsass-sprockets', '< 3.1.0'
-    s.add_dependency 'sass-embedded', '<= 1.69.5'
-    s.add_dependency 'uri', '< 1.0'
-    s.add_dependency 'dartsass-ruby', '>= 3.0.2'
-
-  # Ruby 3.1
-  # =================
-  elsif Gem::Requirement.new('< 3.2').satisfied_by?(Gem::Version.new(RUBY_VERSION))
-    s.add_dependency 'dartsass-sprockets'
-    s.add_dependency 'sass-embedded', '<= 1.70'
-    s.add_dependency 'uri', '< 1.0'
-
-  # Ruby 3.2+
-  # =================
-  else
-    s.add_dependency 'dartsass-sprockets'
-  end
 end
