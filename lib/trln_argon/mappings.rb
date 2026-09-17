@@ -1,4 +1,4 @@
-require 'git'
+require 'json'
 require 'singleton'
 
 module TrlnArgon
@@ -8,82 +8,59 @@ module TrlnArgon
     end
   end
 
+  # Provides locally stored code mappings.
+  #
+  # Expected directory structure:
+  #
+  # config/mappings/argon_mappings/
+  # └── unc/
+  #     ├── location_item_holdings.json
+  #     ├── location_facet.json
+  #     └── url_template.json
+  #
   class MappingsGitFetcher
     include Loggable
 
-    attr_reader :repo_dir
-
-    GIT_URL = 'https://github.com/trln/argon_code_mappings'.freeze
-
     REPO_NAME = 'argon_mappings'.freeze
 
-    DEFAULT_BRANCHES = %w[main master].freeze
+    attr_reader :repo_dir
 
     def initialize(options = {})
-      @repo_base = options.fetch(:repo_base, 'config/mappings')
-      @repo_dir = File.join(@repo_base, REPO_NAME)
-      begin
-        @url = options[:git_url] || ::Rails.configuration.code_mappings[:git_url]
-        remote_branches = Git.ls_remote(@url)['branches'].keys
-        if options[:branch]
-          logger.info("Using '#{options[:branch]}' branch for mappings")
-          @branch = options[:branch]
-        else
-          @branch = DEFAULT_BRANCHES.find { |b| remote_branches.include?(b) }
-        end
+      repo_base = options.fetch(
+        :repo_base,
+        Rails.root.join('config', 'mappings').to_s
+      )
 
-        unless remote_branches.include?(@branch)
-          logger.error("The repository at #{@url} "\
-            "does not contain a branch named '#{@branch}:\n\n"\
-            "we only found #{remote_branches}")
-        end
-      rescue NoMethodError
-        @url = GIT_URL
-        logger.error('Unable to find configuration key `mappings_git_url`')
-        logger.error('You need to specify this in the configuration file')
-        logger.error("for your environment e.g. config/#{::Rails.env}.rb")
-        logger.error("e.g. `config.mappings_git_url = 'https://github.com/myorg/mappings.git'`")
-      end
+      @repo_dir = options.fetch(
+        :repo_dir,
+        File.join(repo_base, REPO_NAME)
+      )
+
+      @repo_dir = File.expand_path(@repo_dir)
+
+      verify_directory!
+      logger.info("Using local code mappings at #{@repo_dir}")
     end
 
-    def clone
-      logger.info("Initial clone of code mappings from #{@url} to #{@repo_base}")
-      @git = Git.clone(@url, REPO_NAME, path: @repo_base)
-      @git.checkout(@branch)
-    end
-
-    # refreshes the contents of the repository from origin;
-    # has checks to short circuit this if we're pulling too often
-    # and not changing branches.
-    # rubocop:disable Metrics/PerceivedComplexity
+    # Kept for compatibility with the existing LookupManager.
+    # No Git refresh is performed.
     def refresh
-      if File.directory?(File.join(@repo_dir, '.git'))
-        logger.debug("Repository #{@repo_dir} appears to be a .git repo")
-        @git ||= Git.open(@repo_dir)
-
-        head_fetch_file = File.join(@repo_dir, '.git', 'FETCH_HEAD')
-
-        # if we're not changing branches and we're within 2 minutes
-        # of our last changes, don't bother pulling new ones.
-        # Otherwise: pull down changes
-        do_pull = if File.exist?(head_fetch_file)
-                    File.stat(head_fetch_file).mtime < (Time.now - 2.minutes) && @git.current_branch == @branch
-                  else
-                    true
-                  end
-
-        if do_pull
-          logger.info("Pulling changes from #{@url}/#{@branch} to #{@repo_dir}")
-          @git.pull('origin', @branch)
-          @git.checkout(@branch)
-        else
-          logger.debug("Not pulling changes from #{@url} because it was updated in the last 2 minutes")
-        end
-      else
-        clone
-      end
+      verify_directory!
+      logger.debug("Using local code mappings at #{@repo_dir}")
+      true
     end
-    # rubocop:enable Metrics/PerceivedComplexity
+
+    private
+
+    def verify_directory!
+      return if File.directory?(@repo_dir)
+
+      raise(
+        "Local code mappings directory does not exist: #{@repo_dir}. " \
+          'Expected the mappings to be stored under ' \
+          'config/mappings/argon_mappings.'
+      )
+    end
   end
 
   class Lookups
@@ -96,8 +73,6 @@ module TrlnArgon
       loc_n: 'loc_n'
     }.freeze
 
-    PATH_COMPONENTS = %i[loc_b loc_n].freeze
-
     FILENAMES = {
       location_holdings: 'location_item_holdings.json',
       location_facet: 'location_facet.json',
@@ -109,18 +84,24 @@ module TrlnArgon
       reload!
     end
 
-    # looks up a display value given a path of the form
-    # "[inst_code].[lookup_type].[code]", e.g.
-    # `unc.location_facet.uncgrar' looks up the code to be used when displaying
-    # the location facet
+    # Looks up a display value given a path of the form:
+    #
+    #   [inst_code].[lookup_type].[code]
+    #
+    # For example:
+    #
+    #   unc.location_facet.uncgrar
+    #
     def lookup(path)
       parts = path.split('.')
-      ctx = @mappings
-      parts.each do |k|
-        ctx = ctx[k]
-        break if ctx.nil? || ctx.empty?
+      context = @mappings
+
+      parts.each do |key|
+        context = context[key]
+        break if context.nil? || context.empty?
       end
-      ctx.nil? ? path : ctx
+
+      context.nil? ? path : context
     end
 
     def mappings
@@ -133,23 +114,42 @@ module TrlnArgon
 
     def load
       mappings = {}
+
       Dir.foreach(@directory) do |dir_entry|
         path = File.expand_path(File.join(@directory, dir_entry))
-        next unless File.directory?(path) && dir_entry =~ /^[a-z]/
 
-        inst_mappings = mappings[File.basename(path)] = {}
-        lhf = File.join(path, FILENAMES[:location_holdings])
-        parse_holdings!(lhf, inst_mappings)
-        lff = File.join(path, FILENAMES[:location_facet])
-        facets = read_json(lff)
-        urlt = File.join(path, FILENAMES[:url_template])
-        url_templates = read_json(urlt)
-        inst_mappings['loc_b'].each do |k, v|
-          facets[k] ||= v
+        next unless File.directory?(path)
+        next unless dir_entry.match?(/\A[a-z]/)
+
+        inst_code = File.basename(path)
+        inst_mappings = mappings[inst_code] = {}
+
+        holdings_file = File.join(
+          path,
+          FILENAMES[:location_holdings]
+        )
+        parse_holdings!(holdings_file, inst_mappings)
+
+        facet_file = File.join(
+          path,
+          FILENAMES[:location_facet]
+        )
+        facets = read_json(facet_file)
+
+        url_template_file = File.join(
+          path,
+          FILENAMES[:url_template]
+        )
+        url_templates = read_json(url_template_file)
+
+        inst_mappings['loc_b'].each do |key, value|
+          facets[key] ||= value
         end
+
         inst_mappings['facet'] = facets
         inst_mappings['url_template'] = url_templates
       end
+
       mappings
     end
 
@@ -162,24 +162,27 @@ module TrlnArgon
       locations_broad = lookups.fetch(KEYS[:loc_b], {})
       loc_b_mappings.update(locations_broad)
 
-      locations_narrow = lookups.fetch(KEYS[:loc_n], {})
       loc_n_mappings = (inst_mappings['loc_n'] ||= {})
+      locations_narrow = lookups.fetch(KEYS[:loc_n], {})
       loc_n_mappings.update(locations_narrow)
     end
 
     def read_json(filename)
-      File.exist?(filename) ? File.open(filename) { |f| JSON.parse(f.read) } : {}
+      return {} unless File.exist?(filename)
+
+      File.open(filename) do |file|
+        JSON.parse(file.read)
+      end
     end
   end
 
-  # Mappings for loc_b/loc_n names, statuses, etc.
+  # Manages mappings for location broad/narrow names, statuses, and related
+  # lookup values.
   class LookupManager
     include Loggable
     include Singleton
 
-    # key under which the 'canary' value will be stored
-    # in the cache; if we stored the lookups in the
-    # cache directly, they would need to be deserialized on each access
+    # The cache stores a canary value rather than the mappings themselves.
     CACHE_KEY = 'TrlrArgon::LookupManager::Lookups::Canary'.freeze
 
     attr_reader :dev_reload_file
@@ -188,23 +191,28 @@ module TrlnArgon
       attr_writer :fetcher
 
       def fetcher
-        @fetcher ||= TrlnArgon::MappingsGitFetcher.new
+        @fetcher ||= MappingsGitFetcher.new
       end
     end
 
     def initialize
-      if Rails.env == 'development'
-        @dev_reload_file = File.join(Rails.root, 'tmp', 'reload-code-mappings')
-        logger.info("development mode -- argon code mappings loaded at
-startup and when #{@dev_reload_file} exists.")
+      if Rails.env.development?
+        @dev_reload_file = File.join(
+          Rails.root,
+          'tmp',
+          'reload-code-mappings'
+        )
+
+        logger.info(
+          "Development mode: Argon code mappings are loaded at startup " \
+            "and when #{@dev_reload_file} exists."
+        )
       end
 
       reload
     end
 
-    # Refreshes mappings from git and reloads
-    # cached lookups.
-    # @see CACHE_KEY
+    # Verifies the local mappings directory and clears the cache marker.
     def reload
       self.class.fetcher.refresh
       Rails.cache.delete(CACHE_KEY)
@@ -214,23 +222,34 @@ startup and when #{@dev_reload_file} exists.")
       lookups.lookup(path)
     end
 
-    # rubocop:disable Layout/LineLength
     def check_cache
-      # in dev mode, allow for expiring the cache via external command
-      if Rails.env == 'development' && File.exist?(dev_reload_file)
-        logger.info("Found #{@dev_reload_file}, reloading argon code mappings")
+      if Rails.env.development? &&
+         dev_reload_file &&
+         File.exist?(dev_reload_file)
+
+        logger.info(
+          "Found #{@dev_reload_file}, reloading Argon code mappings"
+        )
+
         @lookups = nil
-        File.unlink(@dev_reload_file)
-        logger.info("Removed #{@dev_reload_file}, use\n\nbundle exec rake trln_argon:reload_code_mappings\n\nif you want to reload mappings again")
+        File.unlink(dev_reload_file)
+
+        logger.info(
+          "Removed #{@dev_reload_file}. Use " \
+            'bundle exec rake trln_argon:reload_code_mappings ' \
+            'to reload mappings again.'
+        )
       end
 
-      Rails.cache.fetch(CACHE_KEY, expires_in: 24.hours) do |_|
-        logger.info('Location code mappings not found in cache, reloading')
-        @lookups = nil # .reload! if @lookups
+      Rails.cache.fetch(CACHE_KEY, expires_in: 24.hours) do
+        logger.info(
+          'Location code mappings not found in cache, reloading'
+        )
+
+        @lookups = nil
         Time.now.to_s
       end
     end
-    # rubocop:enable Layout/LineLength
 
     def lookups
       check_cache
