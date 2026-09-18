@@ -127,5 +127,8 @@ Lint/ConstantDefinitionInBlock:
 RSpec/IndexedLet:
   Enabled: false
 
+Capybara/RSpec/HaveContent:
+  Enabled: false
+
 Capybara/RSpec/NegationMatcher:
   Enabled: false
