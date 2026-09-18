@@ -118,6 +118,9 @@ Migration/DepartmentName:
 Lint/MissingCopEnableDirective:
   Enabled: false
 
+Lint/SendWithMixinArgument:
+  Enabled: false
+
 Lint/ConstantDefinitionInBlock:
   Enabled: false
 

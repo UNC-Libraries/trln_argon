@@ -204,8 +204,7 @@ module TrlnArgon
         )
 
         logger.info(
-          "Development mode: Argon code mappings are loaded at startup " \
-            "and when #{@dev_reload_file} exists."
+          "Development mode: Argon code mappings are loaded at startup and when #{@dev_reload_file} exists."
         )
       end
 
