@@ -27,12 +27,12 @@ TrlnArgon::Engine.configure do |config|
   apply_local_configuration(config, 'enable_query_truncation')
   apply_local_configuration(config, 'allow_tracebacks')
 
-  mappings_dir = config.argon_code_mappings_dir.to_s
-  mappings_root = TrlnArgon::Engine.root.join('config', 'mappings').to_s
+  mappings_root = TrlnArgon::Engine.root.join('config', 'mappings', 'argon_mappings').to_s
+  app_mappings_root = File.join(config.argon_code_mappings_dir.to_s, 'argon_mappings')
   mappings_candidates = []
-  mappings_candidates << mappings_dir if File.basename(mappings_dir) == 'argon_mappings'
-  mappings_candidates << File.join(mappings_dir, 'argon_mappings')
-  mappings_candidates << File.join(mappings_root, 'argon_mappings')
+  mappings_candidates << app_mappings_root if ENV.key?('ARGON_CODE_MAPPINGS_DIR')
+  mappings_candidates << mappings_root
+  mappings_candidates << app_mappings_root
   mappings_dir = mappings_candidates.find { |path| File.directory?(path) } || mappings_candidates.last
 
   TrlnArgon::LookupManager.fetcher = TrlnArgon::MappingsGitFetcher.new(
