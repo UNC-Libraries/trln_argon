@@ -1,13 +1,13 @@
 inherit_from: .rubocop_todo.yml
 
 require:
-- rubocop-capybara
-- rubocop-factory_bot
-- rubocop-rspec
-- rubocop-rspec_rails
+  - rubocop-capybara
+  - rubocop-factory_bot
+  - rubocop-rspec
+  - rubocop-rspec_rails
 
 AllCops:
-  TargetRubyVersion: 3.0
+  TargetRubyVersion: 3.3
   # TODO: review this later
   NewCops: disable
   Exclude:
@@ -118,8 +118,17 @@ Migration/DepartmentName:
 Lint/MissingCopEnableDirective:
   Enabled: false
 
+Lint/SendWithMixinArgument:
+  Enabled: false
+
 Lint/ConstantDefinitionInBlock:
   Enabled: false
 
 RSpec/IndexedLet:
+  Enabled: false
+
+Capybara/RSpec/HaveContent:
+  Enabled: false
+
+Capybara/RSpec/NegationMatcher:
   Enabled: false

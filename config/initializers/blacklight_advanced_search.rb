@@ -3,7 +3,6 @@
 # local params query type as edismax.
 # Here is the file v8.0.0.alpha2: https://github.com/projectblacklight/blacklight_advanced_search/blob/v8.0.0.alpha2/lib/parsing_nesting/tree.rb
 module BlacklightAdvancedSearch
-  # rubocop:disable ClassAndModuleChildren
   module ParsingNesting::Tree
     class Node
       def build_nested_query(embeddables, solr_params = {}, options = {})
@@ -14,7 +13,7 @@ module BlacklightAdvancedSearch
         if embeddables.find_all { |n| n.is_a?(ExcludedClause) }.length == embeddables.length
           negated = NotExpression.new(List.new(embeddables.collect(&:operand), options[:force_deftype]))
           solr_params = solr_params.merge(mm: '1')
-          return negated.to_query(solr_params)
+          negated.to_query(solr_params)
         else
           collected_embeddables = embeddables.collect(&:to_embed).join(' ')
           inner_query = build_local_params(solr_params, options[:force_deftype]) +
@@ -24,7 +23,7 @@ module BlacklightAdvancedSearch
                           )
                         )
           return '_query_:"' + bs_escape(inner_query) + '"' if options[:always_nested]
-          return inner_query
+          inner_query
         end
       end
 
