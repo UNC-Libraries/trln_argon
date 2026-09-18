@@ -7,7 +7,7 @@ require:
 - rubocop-rspec_rails
 
 AllCops:
-  TargetRubyVersion: 3.0
+  TargetRubyVersion: 3.3
   # TODO: review this later
   NewCops: disable
   Exclude:
