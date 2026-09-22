@@ -27,18 +27,11 @@ TrlnArgon::Engine.configure do |config|
   apply_local_configuration(config, 'enable_query_truncation')
   apply_local_configuration(config, 'allow_tracebacks')
 
-  mappings_root = TrlnArgon::Engine.root.join('config', 'mappings', 'argon_mappings').to_s
-  app_mappings_root = File.join(config.argon_code_mappings_dir.to_s, 'argon_mappings')
-  mappings_candidates = []
-  mappings_candidates << app_mappings_root if ENV.key?('ARGON_CODE_MAPPINGS_DIR')
-  mappings_candidates << mappings_root
-  mappings_candidates << app_mappings_root
-  mappings_dir = mappings_candidates.find { |path| File.directory?(path) } || mappings_candidates.last
-
+  mappings_dir = File.join(config.argon_code_mappings_dir.to_s, 'argon_mappings')
   TrlnArgon::LookupManager.fetcher = TrlnArgon::MappingsGitFetcher.new(repo_dir: mappings_dir)
 
-  # Initialize the local mappings using a UNC location from config/mappings/argon_mappings/unc.
-  TrlnArgon::LookupManager.instance.map('unc.loc_b.d@')
+  # Initialize the application's local mappings, when supplied.
+  TrlnArgon::LookupManager.instance.lookups
 end
 
 # Configure paging defaults

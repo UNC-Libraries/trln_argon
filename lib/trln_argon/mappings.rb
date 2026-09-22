@@ -8,7 +8,7 @@ module TrlnArgon
     end
   end
 
-  # Provides locally stored code mappings.
+  # Provides locally stored code mappings supplied by the host application.
   #
   # Expected directory structure:
   #
@@ -30,28 +30,24 @@ module TrlnArgon
       @repo_dir = options.fetch(:repo_dir, File.join(repo_base, REPO_NAME))
       @repo_dir = File.expand_path(@repo_dir)
 
-      verify_directory!
+      warn_if_missing
       logger.info("Using local code mappings at #{@repo_dir}")
     end
 
     # Kept for compatibility with the existing LookupManager.
     # No Git refresh is performed.
     def refresh
-      verify_directory!
+      warn_if_missing
       logger.debug("Using local code mappings at #{@repo_dir}")
       true
     end
 
     private
 
-    def verify_directory!
+    def warn_if_missing
       return if File.directory?(@repo_dir)
 
-      raise(
-        "Local code mappings directory does not exist: #{@repo_dir}. " \
-          'Expected the mappings to be stored under ' \
-          'config/mappings/argon_mappings.'
-      )
+      logger.warn("Local code mappings directory does not exist: #{@repo_dir}; using empty mappings")
     end
   end
 
@@ -106,6 +102,7 @@ module TrlnArgon
 
     def load
       mappings = {}
+      return mappings unless File.directory?(@directory)
 
       Dir.foreach(@directory) do |dir_entry|
         path = File.expand_path(File.join(@directory, dir_entry))

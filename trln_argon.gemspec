@@ -27,7 +27,6 @@ Gem::Specification.new do |s|
   s.add_dependency 'blacklight-hierarchy', '~> 6.3', '< 6.6.0'
   s.add_dependency 'blacklight_range_limit', '~> 9.0'
   s.add_dependency 'dartsass-sprockets'
-  s.add_dependency 'git', '>= 1.11.0', "< 2"
   s.add_dependency 'rails_autolink', '~> 1.1'
   s.add_dependency 'library_stdnums', '~> 1.6'
   s.add_dependency 'font-awesome-rails', '~> 4.7'
