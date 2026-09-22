@@ -97,7 +97,10 @@ module TrlnArgon
       end
 
       def config_lookup(inst)
-        TrlnArgon::LookupManager.instance.map([inst, 'url_template'].join('.'))
+        values = TrlnArgon::LookupManager.instance.map([inst, 'url_template'].join('.'))
+        return {} unless values.is_a?(Hash)
+
+        values
       end
     end
   end
