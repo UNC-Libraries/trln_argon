@@ -143,40 +143,25 @@ Alternately, if you don't want to fiddle with Apache or NGINX,
 
 ## Code Mappings
 
-Code mappings are handled by synchronizing a directory on the local filesystem
-with the [argon_code_mappings](https://github.com/trln/argon_code_mappings)
-repository.  By default, the repository will be checked out to the directory
-`argon_mappings` under `config/mappings/` under the Rails root (.e.g.
-`config/mappings/argon_mappings`).  If you don't like the idea of having
-another git repository inside what might be the git repository containing your
-application, you can set `ARGON_CODE_MAPPINGS_DIR` (in `local_env.yml`, see
-below) to an appropriate value.
+Code mappings are supplied by the host application as JSON files under
+`config/mappings/argon_mappings/` (or under
+`ARGON_CODE_MAPPINGS_DIR/argon_mappings`). Each institution may provide
+`location_item_holdings.json`, `location_facet.json`, and `url_template.json`.
 
-When running in production, the lookups generated from these files are loaded
-at application startup and reloaded every 24 hours (which allows your
-application to pick up changes coming in from other institutions without you
-having to intervene), but if you're seeing odd results or you want to reload
-the mappings immediately, you can execute the rake task `trln_argon:reload_code_mappings`.
-
-This will sync your local copy with the upstream repository, and un-cache the
-lookups generated from the files in the repository, meaning your changes will
-be visible immediately in the running application.
+The mappings are loaded at application startup. In production, the parsed
+lookups are reloaded every 24 hours. If mappings are changed while the
+application is running, execute the rake task `trln_argon:reload_code_mappings` to clear the
+cache and make the local files visible immediately.
 
     $ RAILS_ENV=production bundle exec rake trln_argon:reload_code_mappings
 
-(this will fail unless you also have SECRET_KEY_BASE defined in your
-environment; it doesn't need to be the actual value in use by the web
-application for this purpose, however.)
+When running in development, the code mappings are loaded once at startup.
+Restart the application or run the rake task with the `development` environment
+after changing the files.
 
-If you want, for any reason (typically, not in production) to use a different
-branch of the mappings repository, set the `ARGON_MAPPINGS_BRANCH` environment
-variable before starting your argon instance.
-
-When running in 'development' environment, the code mappings are loaded *once*
-at startup, because Rails doesn't cache in this mode and otherwise would be
-trying to pull changes down from github too often.  So, in this case, you'll
-need to restart your application or run the above rake task with the
-`development` environment if you want to have changes take effect.
+Mappings are optional. If the host application does not supply the directory,
+Argon starts with an empty mapping set and unmapped lookup paths are returned
+unchanged (e.g. `unc.loc_b.ddda`).
 
 
 ## About the `trln_argon:install` generator task
@@ -200,7 +185,7 @@ You will need to change settings in this file so that features like record rollu
 SOLR_URL: http://127.0.0.1:8983/solr/trln
 LOCAL_INSTITUTION_CODE: unc
 APPLICATION_NAME: TRLN Argon
-# Where the argon_code_mappings git repo is checked out.
+# Base directory containing the host application's argon_mappings directory.
 ARGON_CODE_MAPPINGS_DIR: #{Rails.root.join('config', 'mappings')
 REFWORKS_URL: "https://www.refworks.com.libproxy.lib.unc.edu/express/ExpressImport.asp?vendor=SearchUNC&filter=RIS%20Format&encoding=65001&url="
 ROOT_URL: 'https://discovery.trln.org'
@@ -222,9 +207,8 @@ PAGING_LIMIT: 250
 # bots and humans can overload Solr. Configurable, but the default
 # value is recommended.
 FACET_PAGING_LIMIT: 50
-# this entry need not be present, but this shows the default
-# value; a git repository containing the mappings is checked
-# out to the directory
+# This entry need not be present, but this shows the default
+# location for application-supplied mappings.
 ARGON_CODE_MAPPINGS_DIR: #{File.join(Rails.root, 'config', 'mappings')
 
 # The following are collectively required to perform queries

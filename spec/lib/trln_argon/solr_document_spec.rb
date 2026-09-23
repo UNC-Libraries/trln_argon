@@ -399,6 +399,16 @@ describe TrlnArgon::SolrDocument do
               note: '' }])
       )
     end
+
+    it 'returns the direct link when the local institution has no URL template' do
+      allow(TrlnArgon::LookupManager.instance).to receive(:map)
+        .with('unc.url_template')
+        .and_return('unc.url_template')
+
+      expect(solr_document.shared_fulltext_urls.first[:href]).to eq(
+        'http://www.law.duke.edu/journals/lcp/'
+      )
+    end
   end
 
   describe 'expanded_shared_fulltext_urls' do

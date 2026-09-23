@@ -1,6 +1,7 @@
 # This file is copied to spec/ when you run 'rails generate rspec:install'
 
 require 'engine_cart'
+ENV['ARGON_CODE_MAPPINGS_DIR'] ||= File.expand_path('fixtures/files', __dir__)
 EngineCart.load_application!
 
 Rails.env = 'test'

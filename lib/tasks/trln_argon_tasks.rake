@@ -5,7 +5,7 @@ task :ci do
 end
 
 namespace :trln_argon do
-  desc 'Refreshes code mappings from github and reloads the cache'
+  desc 'Reloads application-supplied code mappings and clears the cache'
   task(reload_code_mappings: :environment) do
     require 'trln_argon/mappings'
     puts 'Expiring cached lookups'
@@ -15,7 +15,7 @@ namespace :trln_argon do
       FileUtils.touch(reload_file)
     end
     TrlnArgon::LookupManager.instance.reload
-    puts 'Reloaded mappings from github'
+    puts 'Reloaded application-supplied mappings'
   end
 
   desc('Repackages Blacklight JS without their autocomplete')
