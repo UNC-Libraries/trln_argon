@@ -149,15 +149,12 @@ Code mappings are supplied by the host application as JSON files under
 `location_item_holdings.json`, `location_facet.json`, and `url_template.json`.
 
 The mappings are loaded at application startup. In production, the parsed
-lookups are reloaded every 24 hours. If mappings are changed while the
-application is running, execute the rake task `trln_argon:reload_code_mappings` to clear the
-cache and make the local files visible immediately.
-
-    $ RAILS_ENV=production bundle exec rake trln_argon:reload_code_mappings
-
+lookups are reloaded only on fresh deploys and restarts.
 When running in development, the code mappings are loaded once at startup.
 Restart the application or run the rake task with the `development` environment
 after changing the files.
+
+    $ RAILS_ENV=development bundle exec rake trln_argon:reload_code_mappings
 
 Mappings are optional. If the host application does not supply the directory,
 Argon starts with an empty mapping set and unmapped lookup paths are returned
