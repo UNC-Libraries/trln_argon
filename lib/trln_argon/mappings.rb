@@ -222,7 +222,7 @@ module TrlnArgon
         )
       end
 
-      Rails.cache.fetch(CACHE_KEY, expires_in: 24.hours) do
+      Rails.cache.fetch(CACHE_KEY, expires_in: 24.days) do
         logger.info('Location code mappings not found in cache, reloading')
 
         @lookups = nil
