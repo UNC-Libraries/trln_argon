@@ -171,9 +171,6 @@ module TrlnArgon
     include Loggable
     include Singleton
 
-    # The cache stores a canary value rather than the mappings themselves.
-    CACHE_KEY = 'TrlrArgon::LookupManager::Lookups::Canary'.freeze
-
     attr_reader :dev_reload_file
 
     class << self
@@ -193,46 +190,43 @@ module TrlnArgon
       reload
     end
 
-    # Verifies the local mappings directory and clears the cache marker.
+    # Clears the process-local lookup object so that mappings are reloaded
+    # from the application's local mapping files on the next lookup.
     def reload
       self.class.fetcher.refresh
-      Rails.cache.delete(CACHE_KEY)
+      @lookups = nil
     end
 
     def map(path)
+      reload_if_requested
       lookups.lookup(path)
     end
 
-    def check_cache
-      if Rails.env.development? &&
-         dev_reload_file &&
-         File.exist?(dev_reload_file)
-
-        logger.info(
-          "Found #{@dev_reload_file}, reloading Argon code mappings"
-        )
-
-        @lookups = nil
-        File.unlink(dev_reload_file)
-
-        logger.info(
-          "Removed #{@dev_reload_file}. Use " \
-            'bundle exec rake trln_argon:reload_code_mappings ' \
-            'to reload mappings again.'
-        )
-      end
-
-      Rails.cache.fetch(CACHE_KEY, expires_in: 24.hours) do
-        logger.info('Location code mappings not found in cache, reloading')
-
-        @lookups = nil
-        Time.now.to_s
-      end
+    # The mappings are loaded once per application process and retained in
+    # memory until #reload is called or the development reload file marker is found.
+    def lookups
+      @lookups ||= Lookups.new(self.class.fetcher.repo_dir)
     end
 
-    def lookups
-      check_cache
-      @lookups ||= Lookups.new(self.class.fetcher.repo_dir)
+    private
+
+    # Reloads mappings when the development reload file marker exists.
+    # The marker is removed after it is detected. This provides an explicit
+    # development-only reload mechanism without writing a cache entry as the
+    # user running the application or rake task.
+    def reload_if_requested
+      return unless Rails.env.development?
+      return unless dev_reload_file && File.exist?(dev_reload_file)
+
+      logger.info("Found #{@dev_reload_file}, reloading Argon code mappings")
+
+      @lookups = nil
+      File.unlink(dev_reload_file)
+
+      logger.info(
+        "Removed #{@dev_reload_file}. Use " \
+          'bundle exec rake trln_argon:reload_code_mappings to reload mappings again.'
+      )
     end
   end
 end

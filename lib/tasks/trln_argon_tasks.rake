@@ -5,10 +5,10 @@ task :ci do
 end
 
 namespace :trln_argon do
-  desc 'Reloads application-supplied code mappings and clears the cache'
+  desc 'Reloads application-supplied code mappings'
   task(reload_code_mappings: :environment) do
     require 'trln_argon/mappings'
-    puts 'Expiring cached lookups'
+    puts 'Updating lookups'
     if Rails.env == 'development'
       puts 'Development environment, creating mappings reload trigger file'
       reload_file = TrlnArgon::LookupManager.instance.dev_reload_file
