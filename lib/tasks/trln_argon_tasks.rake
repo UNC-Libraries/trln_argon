@@ -12,11 +12,11 @@ namespace :trln_argon do
       abort
     end
 
-    require "trln_argon/mappings"
+    require 'trln_argon/mappings'
 
-    puts "Updating lookups"
+    puts 'Updating lookups'
     FileUtils.touch(TrlnArgon::LookupManager.instance.dev_reload_file)
-    puts "Reloaded application-supplied mappings"
+    puts 'Reloaded application-supplied mappings'
   end
 
   desc('Repackages Blacklight JS without their autocomplete')
