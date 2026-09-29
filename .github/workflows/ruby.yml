@@ -8,7 +8,7 @@ jobs:
   tests:
     runs-on: ubuntu-latest
     env:
-      ENGINE_CART_RAILS_OPTIONS: '--skip-javascript --skip-bundle'
+      ENGINE_CART_RAILS_OPTIONS: '--skip-bundle'
     strategy:
       fail-fast: false
       matrix:
