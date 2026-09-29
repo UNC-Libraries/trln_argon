@@ -8,7 +8,7 @@ jobs:
   tests:
     runs-on: ubuntu-latest
     env:
-      ENGINE_CART_RAILS_OPTIONS: '--skip-bundle'
+      ENGINE_CART_RAILS_OPTIONS: '--skip-javascript --skip-bundle'
     strategy:
       fail-fast: false
       matrix:
@@ -31,6 +31,11 @@ jobs:
 
     - name: Generate a Rails testing application
       run: rake engine_cart:generate
+
+    - name: Add Sprockets manifest to testing application
+      run: |
+        mkdir -p .internal_test_app/app/assets/config
+        touch .internal_test_app/app/assets/config/manifest.js
 
     - name: Run tests
       run: rspec
