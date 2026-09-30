@@ -21,7 +21,7 @@ class TestAppGenerator < Rails::Generators::Base
     say_status('info', 'Ensuring Sprockets manifest.js', :magenta)
     say_status('info', '===============================', :magenta)
 
-    manifest = 'app/assets/config/manifest.js'
+    manifest = 'app/assets/config/trln_argon_manifest.js'
     create_file manifest, "//= link_tree ../images\n" unless File.exist?(manifest)
     append_to_file manifest, "//= link application.js\n" unless IO.read(manifest)
                                                                   .include?('link application.js')
