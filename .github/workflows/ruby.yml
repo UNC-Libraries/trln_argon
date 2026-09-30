@@ -36,7 +36,11 @@ jobs:
     - name: Add Sprockets manifest to testing application
       run: |
         mkdir -p .internal_test_app/app/assets/config
-        touch .internal_test_app/app/assets/config/manifest.js
+        printf '%s\n' \
+          '//= link_tree ../images' \
+          '//= link_directory ../stylesheets .css' \
+          '//= link_directory ../javascripts .js' \
+          > .internal_test_app/app/assets/config/manifest.js
 
     - name: Run tests
       run: rspec
