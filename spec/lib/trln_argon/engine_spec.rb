@@ -6,6 +6,10 @@ describe TrlnArgon::Engine do
       expect(config.local_institution_code).to eq('unc')
     end
 
+    it 'loads field settings that contain symbols from YAML' do
+      expect(config.solr_fields[:ACCESS_TYPE][:solr_field]).to eq(:access_type_a)
+    end
+
     it 'sets the application_name' do
       expect(config.application_name).to eq('TRLN Argon')
     end

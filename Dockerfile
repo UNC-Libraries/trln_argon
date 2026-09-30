@@ -1,4 +1,4 @@
-ARG RUBY_VERSION=3.1.6
+ARG RUBY_VERSION=3.3.5
 FROM ruby:${RUBY_VERSION} AS app_bootstrap
 
 RUN apt-get update && apt-get -y upgrade && apt-get install -y nodejs vim less
@@ -18,18 +18,13 @@ FROM app_bootstrap AS runnable
 COPY --from=builder /gems /gems
 COPY ./bundler_config.rb .
 
-# This line is a workaround that seems to be needed when using
-# using ruby:3.1.x Docker images, to prevent this error:
-# `check_for_activated_spec!': You have already activated error_highlight 0.3.0, but your Gemfile requires error_highlight 0.6.0 ...
-RUN gem update error_highlight
-
 RUN $(./bundler_config.rb path /gems)
 
 WORKDIR /app
 
 EXPOSE 3000
 
-ENV ENGINE_CART_RAILS_OPTIONS="--skip-webpack-install --skip-javascript --skip-bundle"
+ENV ENGINE_CART_RAILS_OPTIONS="--skip-javascript --skip-bundle"
 
 ENV BOOTSTRAP_VERSION="~> 5.3"
 
