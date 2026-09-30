@@ -32,8 +32,10 @@ class TestAppGenerator < Rails::Generators::Base
     create_file manifest_argon, "//= link_tree ../images\n" unless File.exist?(manifest_argon)
     append_to_file manifest_argon, "//= link application.js\n" unless IO.read(manifest_argon)
                                                                       .include?('link application.js')
-    append_to_file manifest_argon, "//= link blacklight/manifest.js\n" unless IO.read(manifest_argon)
-                                                                              .include?('link blacklight/manifest.js')
+
+    unless IO.read(manifest_argon).include?('link blacklight/manifest.js')
+      append_to_file manifest_argon, "//= link blacklight/manifest.js\n"
+    end
 
     # Without this, the default Sprockets 4 manifest will raise an exception
     # if app/assets/images is empty.
