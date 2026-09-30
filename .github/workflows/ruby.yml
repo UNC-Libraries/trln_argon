@@ -33,14 +33,5 @@ jobs:
     - name: Generate a Rails testing application
       run: rake engine_cart:generate
 
-    - name: Add Sprockets manifest to testing application
-      run: |
-        mkdir -p .internal_test_app/app/assets/config
-        printf '%s\n' \
-          '//= link_tree ../images' \
-          '//= link_directory ../stylesheets .css' \
-          '//= link_directory ../javascripts .js' \
-          > .internal_test_app/app/assets/config/manifest.js
-
     - name: Run tests
       run: rspec

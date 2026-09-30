@@ -82,11 +82,19 @@ module TrlnArgon
       say_status('info', 'Updating the assets manifest', :magenta)
       say_status('info', '============================', :magenta)
 
-      prepend_to_file 'app/assets/config/manifest.js', "//= link trln_argon_manifest.js\n"
-      prepend_to_file 'app/assets/config/manifest.js', "//= link blacklight/manifest.js\n"
+      manifest = 'app/assets/config/manifest.js'
+
+      # Rails 8 apps default to Propshaft/Importmap and no longer generate
+      # app/assets/config/manifest.js. Since this engine relies on Sprockets,
+      # create it here if it's missing so Sprockets::Railtie doesn't raise
+      # Sprockets::Railtie::ManifestNeededError the next time the app boots.
+      create_file manifest, "//= link_tree ../images\n" unless File.exist?(manifest)
+
+      prepend_to_file manifest, "//= link trln_argon_manifest.js\n"
+      prepend_to_file manifest, "//= link blacklight/manifest.js\n"
 
       return if IO.read('app/assets/javascripts/application.js').include?('application.js')
-      append_to_file 'app/assets/config/manifest.js', "//= link application.js\n"
+      append_to_file manifest, "//= link application.js\n"
     end
 
     def install_stylesheet
