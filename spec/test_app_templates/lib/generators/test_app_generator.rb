@@ -31,7 +31,7 @@ class TestAppGenerator < Rails::Generators::Base
     manifest_argon = 'app/assets/config/trln_argon_manifest.js'
     create_file manifest_argon, "//= link_tree ../images\n" unless File.exist?(manifest_argon)
     append_to_file manifest_argon, "//= link application.js\n" unless IO.read(manifest_argon)
-                                                                      .include?('link application.js')
+                                                                              .include?('link application.js')
 
     unless IO.read(manifest_argon).include?('link blacklight/manifest.js')
       append_to_file manifest_argon, "//= link blacklight/manifest.js\n"
