@@ -251,8 +251,8 @@ module TrlnArgon
         "\n  resource :trln, only: [], as: 'trln', path: '/trln', controller: 'trln' do"\
           "\n    concerns :searchable"\
           "\n    concerns :range_searchable"\
-          "\n  end\n"\
-        end
+          "\n  end\n"
+      end
     end
 
     def add_trln_exportable_routes

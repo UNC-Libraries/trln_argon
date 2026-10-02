@@ -33,7 +33,7 @@ class TestAppGenerator < Rails::Generators::Base
   end
 
   def add_gems
-    gem 'blacklight', '~> 8.0'
+    gem 'blacklight', '~> 8.1'
 
     Bundler.with_unbundled_env do
       run 'bundle install'
