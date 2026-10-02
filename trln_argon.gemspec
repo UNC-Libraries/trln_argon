@@ -21,7 +21,7 @@ Gem::Specification.new do |s|
   s.add_dependency 'rails', '~> 8.1', '< 9'
   s.add_dependency 'json', '< 3'
   s.add_dependency 'blacklight', '~> 8'
-  s.add_dependency 'blacklight_advanced_search', '~> 8.0.0'
+  s.add_dependency 'blacklight_advanced_search', '~> 8.0.0.alpha2'
   # Note: blacklight-hierarchy 6.6.0+ changes the JS
   # significantly enough that it doesn't work for us.
   s.add_dependency 'blacklight-hierarchy', '~> 6.3', '< 6.6.0'
