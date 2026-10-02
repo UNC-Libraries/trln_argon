@@ -90,11 +90,17 @@ module TrlnArgon
       # Sprockets::Railtie::ManifestNeededError the next time the app boots.
       create_file manifest, "//= link_tree ../images\n" unless File.exist?(manifest)
 
-      prepend_to_file manifest, "//= link trln_argon_manifest.js\n"
-      prepend_to_file manifest, "//= link blacklight/manifest.js\n"
+      # application.css is compiled from application.scss (DartSass); the layout
+      # requests it via stylesheet_link_tag, so it must be declared as precompiled.
+      ['trln_argon_manifest.js', 'blacklight/manifest.js'].each do |link|
+        next if IO.read(manifest).include?("link #{link}")
+        prepend_to_file manifest, "//= link #{link}\n"
+      end
 
-      return if IO.read('app/assets/javascripts/application.js').include?('application.js')
-      append_to_file manifest, "//= link application.js\n"
+      ['application.js', 'application.css'].each do |link|
+        next if IO.read(manifest).include?("link #{link}")
+        append_to_file manifest, "//= link #{link}\n"
+      end
     end
 
     def install_stylesheet
