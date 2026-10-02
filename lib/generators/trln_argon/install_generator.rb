@@ -240,9 +240,9 @@ module TrlnArgon
     end
 
     def add_trln_routes
-      return if IO.read('config/routes.rb').include?('resources :trln')
+      return if IO.read('config/routes.rb').include?('resource :trln')
       insert_into_file 'config/routes.rb', after: 'concern :searchable, Blacklight::Routes::Searchable.new' do
-        "\n  resources :trln, only: [:index], as: 'trln', path: '/trln', controller: 'trln' do"\
+        "\n  resource :trln, only: [], as: 'trln', path: '/trln', controller: 'trln' do"\
         "\n    concerns :searchable"\
         "\n    concerns :range_searchable"\
         "\n  end\n"\
