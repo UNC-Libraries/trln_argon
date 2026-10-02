@@ -73,7 +73,7 @@ module TrlnArgon
       insert_into_file 'app/controllers/application_controller.rb',
                        after: 'layout \'blacklight\'' do
         "\n  helper TrlnArgon::Engine.helpers" \
-        "\n  skip_after_action :discard_flash_if_xhr"
+          "\n  skip_after_action :discard_flash_if_xhr"
       end
     end
 
@@ -82,11 +82,25 @@ module TrlnArgon
       say_status('info', 'Updating the assets manifest', :magenta)
       say_status('info', '============================', :magenta)
 
-      prepend_to_file 'app/assets/config/manifest.js', "//= link trln_argon_manifest.js\n"
-      prepend_to_file 'app/assets/config/manifest.js', "//= link blacklight/manifest.js\n"
+      manifest = 'app/assets/config/manifest.js'
 
-      return if IO.read('app/assets/javascripts/application.js').include?('application.js')
-      append_to_file 'app/assets/config/manifest.js', "//= link application.js\n"
+      # Rails 8 apps default to Propshaft/Importmap and no longer generate
+      # app/assets/config/manifest.js. Since this engine relies on Sprockets,
+      # create it here if it's missing so Sprockets::Railtie doesn't raise
+      # Sprockets::Railtie::ManifestNeededError the next time the app boots.
+      create_file manifest, "//= link_tree ../images\n" unless File.exist?(manifest)
+
+      # application.css is compiled from application.scss (DartSass); the layout
+      # requests it via stylesheet_link_tag, so it must be declared as precompiled.
+      ['trln_argon_manifest.js', 'blacklight/manifest.js'].each do |link|
+        next if IO.read(manifest).include?("link #{link}")
+        prepend_to_file manifest, "//= link #{link}\n"
+      end
+
+      ['application.js', 'application.css'].each do |link|
+        next if IO.read(manifest).include?("link #{link}")
+        append_to_file manifest, "//= link #{link}\n"
+      end
     end
 
     def install_stylesheet
@@ -125,15 +139,17 @@ module TrlnArgon
       return if IO.read('app/controllers/catalog_controller.rb').include?('TrlnArgon')
       insert_into_file 'app/controllers/catalog_controller.rb', after: 'include Blacklight::Catalog' do
         "\n\n  # CatalogController behavior and configuration for TrlnArgon"\
-        "\n  include TrlnArgon::ControllerOverride\n"
+          "\n  include TrlnArgon::ControllerOverride\n"
       end
     end
 
     def inject_sass_config
       # See https://github.com/tablecheck/dartsass-sprockets?tab=readme-ov-file#silencing-deprecation-warnings
-      insert_into_file 'config/application.rb', after: /config\.eager_load_paths.*$/ do
-        "\n\n    # Quiet Sass deprecation warnings from dependencies"\
-        "\n    config.sass.quiet_deps = true"
+      return if IO.read('config/application.rb').include?('config.sass.quiet_deps')
+
+      inject_into_class 'config/application.rb', 'Application' do
+        "\n    # Quiet Sass deprecation warnings from dependencies"\
+          "\n    config.sass.quiet_deps = true\n"
       end
     end
 
@@ -157,11 +173,11 @@ module TrlnArgon
       return if IO.read('config/application.rb').include?('local_env.yml')
       insert_into_file 'config/application.rb', after: 'class Application < Rails::Application' do
         "\n\n  config.before_configuration do"\
-        "\n      env_file = File.join(Rails .root, 'config', 'local_env.yml')"\
-        "\n      if File.exist?(env_file)"\
-        "\n        YAML.load_file(env_file).each { |key, value| ENV[key.to_s] = value }"\
-        "\n      end"\
-        "\n    end\n"
+          "\n      env_file = File.join(Rails .root, 'config', 'local_env.yml')"\
+          "\n      if File.exist?(env_file)"\
+          "\n        YAML.safe_load_file(env_file).each { |key, value| ENV[key.to_s] = value }"\
+          "\n      end"\
+          "\n    end\n"
       end
     end
 
@@ -195,8 +211,8 @@ module TrlnArgon
       return if IO.read('app/models/search_builder.rb').include?('TrlnArgon::ArgonSearchBuilder')
       insert_into_file 'app/models/search_builder.rb', after: 'include Blacklight::Solr::SearchBuilderBehavior' do
         "\n  include BlacklightAdvancedSearch::AdvancedSearchBuilder"\
-        "\n  include TrlnArgon::ArgonSearchBuilder\n"\
-        "\n\n  self.default_processor_chain += [:add_advanced_search_to_solr]\n"
+          "\n  include TrlnArgon::ArgonSearchBuilder\n"\
+          "\n\n  self.default_processor_chain += [:add_advanced_search_to_solr]\n"
       end
     end
 
@@ -232,19 +248,19 @@ module TrlnArgon
     def add_trln_routes
       return if IO.read('config/routes.rb').include?('resource :trln')
       insert_into_file 'config/routes.rb', after: 'concern :searchable, Blacklight::Routes::Searchable.new' do
-        "\n  resource :trln, only: [:index], as: 'trln', path: '/trln', controller: 'trln' do"\
-        "\n    concerns :searchable"\
-        "\n    concerns :range_searchable"\
-        "\n  end\n"\
-      end
+        "\n  resource :trln, only: [], as: 'trln', path: '/trln', controller: 'trln' do"\
+          "\n    concerns :searchable"\
+          "\n    concerns :range_searchable"\
+          "\n  end\n"\
+        end
     end
 
     def add_trln_exportable_routes
       return if IO.read('config/routes.rb').include?('resources :trln_solr_documents')
       insert_into_file('config/routes.rb', after: 'concern :exportable, Blacklight::Routes::Exportable.new') do
         "\n\n  resources :trln_solr_documents, only: [:show], path: '/trln', controller: 'trln' do"\
-        "\n    concerns :exportable"\
-        "\n  end"
+          "\n    concerns :exportable"\
+          "\n  end"
       end
     end
 
