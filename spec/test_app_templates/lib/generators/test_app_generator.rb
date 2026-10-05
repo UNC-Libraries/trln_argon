@@ -7,8 +7,33 @@ class TestAppGenerator < Rails::Generators::Base
   # into the test app, this generator will be run immediately
   # after setting up the application
 
+  # BL8's Sprockets asset generator skips creating app/assets/config/manifest.js
+  # on Rails > 7 (it assumes you're using Propshaft/Importmap by default), so we
+  # have to create it ourselves here, mirroring what BL7 used to do. Without this
+  # file, Sprockets::Railtie raises Sprockets::Railtie::ManifestNeededError as soon
+  # as any `bin/rails` command boots the app. Since trln_argon.gemspec already
+  # depends on dartsass-sprockets (which pulls in sprockets-rails), this can
+  # happen starting with the very first `generate` call below, so this must run
+  # before any of them.
+  # https://github.com/projectblacklight/blacklight/blob/release-8.x/lib/generators/blacklight/assets/sprockets_generator.rb
+  def ensure_sprockets_manifest
+    say_status('info', '===============================', :magenta)
+    say_status('info', 'Ensuring Sprockets manifest.js', :magenta)
+    say_status('info', '===============================', :magenta)
+
+    manifest = 'app/assets/config/manifest.js'
+    create_file manifest, "//= link_tree ../images\n" unless File.exist?(manifest)
+    ['application.js', 'application.css', 'blacklight/manifest.js'].each do |link|
+      append_to_file manifest, "//= link #{link}\n" unless IO.read(manifest).include?("link #{link}")
+    end
+
+    # Without this, the default Sprockets 4 manifest will raise an exception
+    # if app/assets/images is empty.
+    empty_directory 'app/assets/images'
+  end
+
   def add_gems
-    gem 'blacklight', '~> 8.0'
+    gem 'blacklight', '~> 8.1'
 
     Bundler.with_unbundled_env do
       run 'bundle install'
