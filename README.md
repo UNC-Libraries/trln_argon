@@ -61,38 +61,36 @@ as it tends to make sure that all gems are already installed.
 
 ### `bundler_config.rb`
 
-By default we're using Ruby 2.7 in the container but you may occasionally want
-to switch this up to Ruby 2.6; since these versions of Ruby come with different
-versions of bundler that use different syntax to set the path for installed
-gems, this script must be copied into the container and its output executed in
-order to portably set this path. It should not be needed outside this narrow
-context.
+The container uses Ruby 3.3 by default. Rails 8 requires Ruby 3.2 or newer; set
+the `RUBY_VERSION` build argument to select another compatible version. The
+`bundler_config.rb` script handles differences in Bundler's configuration
+syntax and is only needed in the container setup.
 
 ## Creating a Rails Application using the TRLN Argon Engine.
 
 This is what you want to do if you are intending to customize an application using the engine for a local catalog instance, it's not needed for development.
 
-1. Create a new Rails application:
+1. Create a new Rails 8 application with Ruby 3.2 or newer:
 
         $ rails new my_terrific_catalog
 
-2. Install Blacklight and Argon, run the Blacklight and Argon generators.
+2. Add Blacklight 8 and Argon to the new application's Gemfile:
 
-Add the folliwing lines to your Gemfile:
-
-```
-gem 'blacklight', "~> 6.16"
-gem 'trln_argon', git: 'https://github.com/trln/trln_argon'
+```ruby
+gem 'blacklight', '~> 8.1'
+gem 'trln_argon', git: 'https://github.com/UNC-Libraries/trln_argon'
 ```
 
-3. Run the following:
+3. Install the dependencies and run the Blacklight and Argon generators:
 
-        $ bundle install
-        $ bundle exec rails generate blacklight:install --devise --skip-solr --skip-javascript
-        $ bundle exec rails generate trln_argon:install
-        $ bundle exec rake db:migrate
+```
+$ bundle install
+$ bundle exec rails generate blacklight:install --devise --skip-solr --skip-javascript
+$ bundle exec rails generate trln_argon:install
+$ bundle exec rake db:migrate
+```
 
-At this point, you have a rails application with all the trln_argon stuff installed, and you can run it with
+At this point, you have a Rails application with all the TRLN Argon features installed, and you can run it with
 
     $ bundle exec puma -d
 

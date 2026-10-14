@@ -18,10 +18,10 @@ Gem::Specification.new do |s|
 
   s.files = Dir['{app,config,db,lib}/**/*', 'MIT-LICENSE', 'Rakefile', 'README.md']
 
-  s.add_dependency 'rails', '>= 7.1', '< 8'
+  s.add_dependency 'rails', '~> 8.1', '< 9'
   s.add_dependency 'json', '< 3'
   s.add_dependency 'blacklight', '~> 8'
-  s.add_dependency 'blacklight_advanced_search', '~> 8.0.0.alpha2'
+  s.add_dependency 'blacklight_advanced_search', '~> 8.0.0'
   # Note: blacklight-hierarchy 6.6.0+ changes the JS
   # significantly enough that it doesn't work for us.
   s.add_dependency 'blacklight-hierarchy', '~> 6.3', '< 6.6.0'
@@ -41,7 +41,7 @@ Gem::Specification.new do |s|
   # ViewComponent 4 requires ruby 3.3+
   s.add_dependency 'view_component', '< 4'
 
-  s.add_development_dependency 'rspec-rails', '~> 6'
+  s.add_development_dependency 'rspec-rails', '~> 8.0'
   s.add_development_dependency 'capybara', '~> 3.29'
   s.add_development_dependency 'pry', '~> 0.14'
   s.add_development_dependency 'rubocop', '~> 1.0'

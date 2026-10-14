@@ -1,4 +1,4 @@
-ARG RUBY_VERSION=3.1.6
+ARG RUBY_VERSION=3.3.5
 FROM ruby:${RUBY_VERSION} AS app_bootstrap
 
 RUN apt-get update && apt-get -y upgrade && apt-get install -y nodejs vim less
@@ -29,7 +29,7 @@ WORKDIR /app
 
 EXPOSE 3000
 
-ENV ENGINE_CART_RAILS_OPTIONS="--skip-webpack-install --skip-javascript --skip-bundle"
+ENV ENGINE_CART_RAILS_OPTIONS="--skip-javascript --skip-bundle"
 
 ENV BOOTSTRAP_VERSION="~> 5.3"
 

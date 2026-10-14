@@ -103,7 +103,7 @@ module TrlnArgon
       end
 
       def load_yaml_file(file_path)
-        YAML.load_file(file_path) if File.exist?(file_path)
+        YAML.safe_load_file(file_path, permitted_classes: [Symbol]) if File.exist?(file_path)
       end
 
       def solr_field_defaults_file_path
@@ -111,7 +111,7 @@ module TrlnArgon
       end
 
       def solr_field_overrides_file_path
-        File.join(Rails.root, '/config/solr_field_overrides.yml')
+        Rails.root.join('config', 'solr_field_overrides.yml')
       end
     end
   end
