@@ -24,7 +24,7 @@ Gem::Specification.new do |s|
   s.add_dependency 'blacklight_advanced_search', '~> 8.0.0'
   # Note: blacklight-hierarchy 6.6.0+ changes the JS
   # significantly enough that it doesn't work for us.
-  s.add_dependency 'blacklight-hierarchy', '~> 6.3', '< 6.6.0'
+  s.add_dependency 'blacklight-hierarchy', '~> 6.9'
   s.add_dependency 'blacklight_range_limit', '~> 9.0'
   s.add_dependency 'dartsass-sprockets'
   s.add_dependency 'rails_autolink', '~> 1.1'
