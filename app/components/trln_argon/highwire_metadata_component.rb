@@ -1,7 +1,7 @@
 module TrlnArgon
   class HighwireMetadataComponent < Blacklight::Component
     def initialize(document)
-      super
+      super()
       @document = document
     end
 
