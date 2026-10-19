@@ -4,7 +4,7 @@ module TrlnArgon
     # @param field [Blacklight::FieldPresenter]
     # @param label_class [String]
     # @param value_class [String]
-    def initialize(field:, label_class: '', value_class: '')
+    def initialize(field:, label_class: '', value_class: '', **options)
       super(
         field: field,
         label_class: label_class,
