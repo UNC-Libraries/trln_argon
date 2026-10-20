@@ -33,7 +33,7 @@ class TestAppGenerator < Rails::Generators::Base
   end
 
   def add_gems
-    gem 'blacklight', '~> 8.1'
+    gem 'blacklight', '~> 9.2'
 
     Bundler.with_unbundled_env do
       run 'bundle install'
@@ -48,10 +48,9 @@ class TestAppGenerator < Rails::Generators::Base
     # Skip the default BL assets generator via --skip-assets:
     generate 'blacklight:install', '--devise', '--skip-solr', '--skip-assets'
 
-    # We need to explicitly specify BL8's Sprockets assets generator, else
+    # We need to explicitly specify BL9's Sprockets assets generator, else
     # BL will assume we want to use Propshaft and/or Importmap. See:
-    # https://github.com/projectblacklight/blacklight/blob/release-8.x/lib/generators/blacklight/assets_generator.rb
-    # https://github.com/projectblacklight/blacklight/blob/release-8.x/lib/generators/blacklight/assets/sprockets_generator.rb
+    # https://github.com/projectblacklight/blacklight/blob/release-9.x/lib/generators/blacklight/assets_generator.rb
     say_status('info', '========================================', :magenta)
     say_status('info', 'Generating Blacklight assets w/Sprockets', :magenta)
     say_status('info', '========================================', :magenta)
