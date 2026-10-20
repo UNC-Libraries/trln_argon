@@ -1,7 +1,8 @@
 module TrlnArgon
   class DocumentMetadataComponent < Blacklight::DocumentMetadataComponent
-    def initialize(fields: [], tag: 'dl', classes: %w[document-metadata dl-invert row],
-      show: false, view_type: nil, field_layout: nil, **component_args)
+    # rubocop:disable Metrics/ParameterLists
+    def initialize(fields: [], tag: 'dl', classes: %w[document-metadata dl-invert row], show: false, view_type: nil,
+                   field_layout: nil, **component_args)
       fields = fields.map(&:itself) if fields.is_a?(Enumerator)
 
       super(
@@ -14,6 +15,7 @@ module TrlnArgon
         **component_args
       )
     end
+    # rubocop:enable Metrics/ParameterLists
 
     def render?
       @fields.present?
