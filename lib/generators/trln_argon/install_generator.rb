@@ -181,7 +181,7 @@ module TrlnArgon
       end
     end
 
-    # rubocop:disable Style/StringConcatenation
+    # rubocop:disable Style/StringConcatenation, Metrics/MethodLength
     def remove_default_blacklight_configs
       file = 'app/controllers/catalog_controller.rb'
 
@@ -226,7 +226,7 @@ module TrlnArgon
         gsub_file(file, remove_marker, '\1# \2' + "\n")
       end
     end
-    # rubocop:enable Style/StringConcatenation
+    # rubocop:enable Style/StringConcatenation, Metrics/MethodLength
 
     def inject_search_builder_behavior
       return if IO.read('app/models/search_builder.rb').include?('TrlnArgon::ArgonSearchBuilder')
