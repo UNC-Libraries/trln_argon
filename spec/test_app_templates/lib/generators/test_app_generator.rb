@@ -39,6 +39,9 @@ class TestAppGenerator < Rails::Generators::Base
 
   def add_gems
     gem 'blacklight', '~> 9.2.1'
+    gem 'sprockets-rails'
+    gem 'bootstrap', '~> 5.3'
+    gem 'dartsass-sprockets'
 
     Bundler.with_unbundled_env do
       run 'bundle install'
@@ -71,6 +74,7 @@ class TestAppGenerator < Rails::Generators::Base
     say_status('info', '========================================', :magenta)
 
     create_file 'app/assets/javascripts/application.js', <<~JAVASCRIPT
+       //= require bootstrap
       //= require blacklight/blacklight
       //= require_tree .
     JAVASCRIPT
