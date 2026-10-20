@@ -22,9 +22,14 @@ class TestAppGenerator < Rails::Generators::Base
     say_status('info', '===============================', :magenta)
 
     manifest = 'app/assets/config/manifest.js'
-    create_file manifest, "//= link_tree ../images\n" unless File.exist?(manifest)
-    ['application.js', 'application.css', 'blacklight/manifest.js'].each do |link|
-      append_to_file manifest, "//= link #{link}\n" unless IO.read(manifest).include?("link #{link}")
+    create_file manifest, <<~JAVASCRIPT unless File.exist?(manifest)
+    //= link_tree ../images
+  JAVASCRIPT
+
+    %w[application.js application.css blacklight/manifest.js].each do |link|
+      next if File.read(manifest).include?("//= link #{link}")
+
+      append_to_file manifest, "//= link #{link}\n"
     end
 
     # Without this, the default Sprockets 4 manifest will raise an exception
@@ -33,7 +38,7 @@ class TestAppGenerator < Rails::Generators::Base
   end
 
   def add_gems
-    gem 'blacklight', '~> 9.2'
+    gem 'blacklight', '~> 9.2.1'
 
     Bundler.with_unbundled_env do
       run 'bundle install'
@@ -55,7 +60,23 @@ class TestAppGenerator < Rails::Generators::Base
     say_status('info', '========================================', :magenta)
     say_status('info', 'Generating Blacklight assets w/Sprockets', :magenta)
     say_status('info', '========================================', :magenta)
-    generate 'blacklight:assets:sprockets'
+    install_sprockets_entrypoints
+  end
+
+  # BL 9 removed the sprockets functionality, so it no longer generates application.js and application.scss, so we have to create them ourselves.
+  def install_sprockets_entrypoints
+    say_status('info', '========================================', :magenta)
+    say_status('info', 'Configuring Sprockets entrypoints', :magenta)
+    say_status('info', '========================================', :magenta)
+
+    create_file 'app/assets/javascripts/application.js', <<~JAVASCRIPT
+    //= require blacklight/blacklight
+    //= require_tree .
+  JAVASCRIPT
+
+    create_file 'app/assets/stylesheets/application.scss', <<~SCSS
+    @import "trln_argon_dependencies";
+  SCSS
   end
 
   def remove_blacklight_scss
@@ -65,16 +86,6 @@ class TestAppGenerator < Rails::Generators::Base
     say_status('info', 'Removing Blacklight SCSS file', :magenta)
     say_status('info', '=============================', :magenta)
     remove_file 'app/assets/stylesheets/blacklight.scss'
-  end
-
-  # The sassc-rails gem is added by the BL assets generator but we don't want it.
-  # We'll use dartsass-sprockets instead.
-  # https://github.com/projectblacklight/blacklight/blob/release-8.x/lib/generators/blacklight/assets/sprockets_generator.rb#L33
-  def remove_sassc_rails
-    say_status('info', '====================', :magenta)
-    say_status('info', 'Removing SassC-Rails', :magenta)
-    say_status('info', '====================', :magenta)
-    gsub_file('Gemfile', /^.*gem\s+["']sassc-rails["'].*$/, '')
   end
 
   def install_dartsass
