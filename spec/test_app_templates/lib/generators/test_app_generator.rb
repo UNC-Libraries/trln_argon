@@ -51,6 +51,7 @@ class TestAppGenerator < Rails::Generators::Base
     # We need to explicitly specify BL9's Sprockets assets generator, else
     # BL will assume we want to use Propshaft and/or Importmap. See:
     # https://github.com/projectblacklight/blacklight/blob/release-9.x/lib/generators/blacklight/assets_generator.rb
+    # https://github.com/projectblacklight/blacklight/blob/release-9.x/lib/generators/blacklight/assets/sprockets_generator.rb
     say_status('info', '========================================', :magenta)
     say_status('info', 'Generating Blacklight assets w/Sprockets', :magenta)
     say_status('info', '========================================', :magenta)
