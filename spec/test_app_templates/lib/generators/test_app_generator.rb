@@ -23,8 +23,8 @@ class TestAppGenerator < Rails::Generators::Base
 
     manifest = 'app/assets/config/manifest.js'
     create_file manifest, <<~JAVASCRIPT unless File.exist?(manifest)
-    //= link_tree ../images
-  JAVASCRIPT
+      //= link_tree ../images
+    JAVASCRIPT
 
     %w[application.js application.css blacklight/manifest.js].each do |link|
       next if File.read(manifest).include?("//= link #{link}")
@@ -63,20 +63,21 @@ class TestAppGenerator < Rails::Generators::Base
     install_sprockets_entrypoints
   end
 
-  # BL 9 removed the sprockets functionality, so it no longer generates application.js and application.scss, so we have to create them ourselves.
+  # BL 9 removed the sprockets functionality, so it no longer generates application.js
+  # and application.scss, so we have to create them ourselves.
   def install_sprockets_entrypoints
     say_status('info', '========================================', :magenta)
     say_status('info', 'Configuring Sprockets entrypoints', :magenta)
     say_status('info', '========================================', :magenta)
 
     create_file 'app/assets/javascripts/application.js', <<~JAVASCRIPT
-    //= require blacklight/blacklight
-    //= require_tree .
-  JAVASCRIPT
+      //= require blacklight/blacklight
+      //= require_tree .
+    JAVASCRIPT
 
     create_file 'app/assets/stylesheets/application.scss', <<~SCSS
-    @import "trln_argon_dependencies";
-  SCSS
+      @import "trln_argon_dependencies";
+    SCSS
   end
 
   def remove_blacklight_scss
