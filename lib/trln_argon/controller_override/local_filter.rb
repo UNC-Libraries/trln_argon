@@ -12,7 +12,6 @@ module TrlnArgon
       # client side for the TRLN/local toggle.
       def count_only
         builder = search_service.search_builder.with(search_state)
-        builder.rows = '0'
 
         builder.processor_chain.delete(:add_facetting_to_solr)
         builder.processor_chain.delete(:only_home_facets)

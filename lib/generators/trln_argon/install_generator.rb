@@ -219,7 +219,10 @@ module TrlnArgon
         /(\s+)(config.add_show_field.+?$)\n*/,
         /(\s+)(config.add_search_field.+?)$\n*/,
         /(\s+)(config.add_sort_field.+?)$\n*/,
-        /(\s+)(config.add_show_tools_partial.+?)$\n*/
+        /(\s+)(config.add_show_tools_partial.+?)$\n*/,
+        # Blacklight 9 appends every facet field to advanced_search.form_solr_parameters,
+        # which overrides the TRLN advanced search facet configuration.
+        /(\s+)(config\.copy_facet_field_config_to_advanced!)$\n*/
       ]
 
       fields_to_remove.each do |remove_marker|
