@@ -9,7 +9,7 @@
 
 <div class="row">
   <div class="<%= show_tools_class %>">
-    <%= render :partial => 'show_tools' %>
+    <%= render TrlnArgon::Document::ShowToolsComponent.new(document: @document) %>
   </div>
 </div>
 
