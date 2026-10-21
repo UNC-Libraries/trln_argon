@@ -29,10 +29,10 @@ module TrlnArgon
       end
 
       def includes_author_search?
-        blacklight_params.key?('search_field') &&
-          ((blacklight_params['search_field'] == 'author') ||
-          (blacklight_params['search_field'] == 'advanced' &&
-          blacklight_params.fetch('author', nil).present?))
+        search_state.params.key?('search_field') &&
+          ((search_state.params['search_field'] == 'author') ||
+          (search_state.params['search_field'] == 'advanced' &&
+          search_state.params.fetch('author', nil).present?))
       end
     end
   end

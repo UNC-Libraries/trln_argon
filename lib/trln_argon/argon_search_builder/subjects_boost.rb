@@ -35,30 +35,30 @@ module TrlnArgon
       end
 
       def subjects_title_boost_query
-        if blacklight_params.key?(:q) &&
-           blacklight_params[:q].present?
+        if search_state.params.key?(:q) &&
+           search_state.params[:q].present?
           standard_search_title_boost
-        elsif blacklight_params.key?('subject') &&
-              blacklight_params['subject'].present?
+        elsif search_state.params.key?('subject') &&
+              search_state.params['subject'].present?
           advanced_search_title_boost
         end
       end
 
       def standard_search_title_boost
         "#{TrlnArgon::Fields::TITLE_MAIN_INDEXED_NO_STEM}:"\
-        "(#{RSolr.solr_escape(blacklight_params[:q])})^50"
+        "(#{RSolr.solr_escape(search_state.params[:q])})^50"
       end
 
       def advanced_search_title_boost
         "#{TrlnArgon::Fields::TITLE_MAIN_INDEXED_NO_STEM}:"\
-        "(#{RSolr.solr_escape(blacklight_params['subject'])})^50"
+        "(#{RSolr.solr_escape(search_state.params['subject'])})^50"
       end
 
       def includes_subject_search?
-        blacklight_params.key?('search_field') &&
-          (['subject', 'genre_headings'].include?(blacklight_params['search_field']) ||
-          (blacklight_params['search_field'] == 'advanced' &&
-          blacklight_params.fetch('subject', nil).present?))
+        search_state.params.key?('search_field') &&
+          (['subject', 'genre_headings'].include?(search_state.params['search_field']) ||
+          (search_state.params['search_field'] == 'advanced' &&
+          search_state.params.fetch('subject', nil).present?))
       end
     end
   end
