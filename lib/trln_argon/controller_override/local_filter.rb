@@ -36,7 +36,7 @@ module TrlnArgon
 
       # TODO: BL7 Undefined method repository
       def filtered_results_query_response
-        search_service.repository.search(local_filter_search_builder
+        search_service.repository.search(params: local_filter_search_builder
           .append(*additional_processor_chain_methods)
           .with(search_state))
       end
