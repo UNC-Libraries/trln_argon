@@ -1,11 +1,12 @@
 module TrlnArgon
   class MetadataHeaderFieldLayoutComponent < Blacklight::MetadataFieldLayoutComponent
-    def initialize(field:, label_class: 'visually-hidden', value_class: '')
-      super
-      @field = field
-      @key = @field.key.parameterize
-      @label_class = label_class
-      @value_class = value_class
+    def initialize(field:, label_class: 'visually-hidden', value_class: '', **options)
+      super(
+        field: field,
+        label_class: label_class,
+        value_class: value_class,
+        **options
+      )
     end
 
     # values is an Array of ViewComponent::SlotV2

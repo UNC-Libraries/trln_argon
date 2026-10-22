@@ -181,31 +181,55 @@ module TrlnArgon
       end
     end
 
-    # rubocop:disable Style/StringConcatenation
+    # rubocop:disable Style/StringConcatenation, Metrics/MethodLength
     def remove_default_blacklight_configs
-      # For multi line fields
-      fields_to_remove = [/ +config.add_facet_field 'example_query_facet_field'[\s\S]+?}\n[ ]+}/,
-                          / +config.add_search_field\([\s\S]+?end/]
+      file = 'app/controllers/catalog_controller.rb'
+
+      # Blacklight 9.2.1 generates facet fields across multiple lines:
+      #
+      # config.add_facet_field 'subject_ssim',
+      #   label: 'Pivot Field',
+      #   pivot: ['language_ssim', 'subject_geo_ssim', 'subject_ssim'],
+      #   collapsing: true,
+      #   include_in_advanced_search: false
+      #
+      # Remove the complete block, rather than only the first line.
+      gsub_file(
+        file,
+        /^[ \t]*config\.add_facet_field\b[^\n]*,\n(?:[ \t]+[a-zA-Z_][a-zA-Z0-9_]*:.*\n)+/,
+        ''
+      )
+
+      # For other multiline fields
+      fields_to_remove = [
+        / +config.add_facet_field 'example_query_facet_field'[\s\S]+?}\n[ ]+}/,
+        / +config.add_search_field\([\s\S]+?end/
+      ]
 
       fields_to_remove.each do |remove_marker|
-        gsub_file('app/controllers/catalog_controller.rb', /#{remove_marker}/, '')
+        gsub_file(file, /#{remove_marker}/, '')
       end
 
-      # For single line fields
-      fields_to_remove = [/(\s+)(config.index.title_field +=.+?)$\n*/,
-                          /(\s+)(config.index.display_type_field +=.+?)$\n*/,
-                          /(\s+)(config.add_facet_field\b.+?)$\n*/,
-                          /(\s+)(config.add_index_field.+?)$\n*/,
-                          /(\s+)(config.add_show_field.+?$)\n*/,
-                          /(\s+)(config.add_search_field.+?)$\n*/,
-                          /(\s+)(config.add_sort_field.+?)$\n*/,
-                          /(\s+)(config.add_show_tools_partial.+?)$\n*/]
+      # For single-line fields
+      fields_to_remove = [
+        /(\s+)(config.index.title_field +=.+?)$\n*/,
+        /(\s+)(config.index.display_type_field +=.+?)$\n*/,
+        /(\s+)(config.add_facet_field\b.+?)$\n*/,
+        /(\s+)(config.add_index_field.+?)$\n*/,
+        /(\s+)(config.add_show_field.+?$)\n*/,
+        /(\s+)(config.add_search_field.+?)$\n*/,
+        /(\s+)(config.add_sort_field.+?)$\n*/,
+        /(\s+)(config.add_show_tools_partial.+?)$\n*/,
+        # Blacklight 9 appends every facet field to advanced_search.form_solr_parameters,
+        # which overrides the TRLN advanced search facet configuration.
+        /(\s+)(config\.copy_facet_field_config_to_advanced!)$\n*/
+      ]
 
       fields_to_remove.each do |remove_marker|
-        gsub_file('app/controllers/catalog_controller.rb', remove_marker, '\1# \2' + "\n")
+        gsub_file(file, remove_marker, '\1# \2' + "\n")
       end
     end
-    # rubocop:enable Style/StringConcatenation
+    # rubocop:enable Style/StringConcatenation, Metrics/MethodLength
 
     def inject_search_builder_behavior
       return if IO.read('app/models/search_builder.rb').include?('TrlnArgon::ArgonSearchBuilder')

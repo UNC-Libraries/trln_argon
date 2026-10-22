@@ -1,5 +1,5 @@
 <%= render 'did_you_mean' %>
 
-<%= render 'constraints' %>
+<%= render blacklight_config&.view_config(document_index_view_type)&.constraints_component.new(search_state: search_state) %>
 
 <%= render 'sort_and_per_page' %>

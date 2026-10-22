@@ -12,7 +12,6 @@ module TrlnArgon
       # client side for the TRLN/local toggle.
       def count_only
         builder = search_service.search_builder.with(search_state)
-        builder.rows = '0'
 
         builder.processor_chain.delete(:add_facetting_to_solr)
         builder.processor_chain.delete(:only_home_facets)
@@ -36,11 +35,13 @@ module TrlnArgon
       private
 
       # TODO: BL7 Undefined method repository
+      # rubocop:disable Layout/MultilineMethodCallIndentation
       def filtered_results_query_response
-        search_service.repository.search(local_filter_search_builder
-          .append(*additional_processor_chain_methods)
-          .with(search_state))
+        search_service.repository.search(params: local_filter_search_builder
+                                                   .append(*additional_processor_chain_methods)
+                                                   .with(search_state))
       end
+      # rubocop:enable Layout/MultilineMethodCallIndentation
 
       # This is needed so that controllers that inherit from CatalogController
       # Will have any additional processor chain methods applied to the
