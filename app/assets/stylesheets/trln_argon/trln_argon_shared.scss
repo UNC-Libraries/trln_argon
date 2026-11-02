@@ -1291,11 +1291,7 @@ body.blacklight-trln-index #documents .items {
 
 #document-tools li.bookmark {
   display: block;
-  float: right;
-  margin-top: 0;
-  margin-right: 15px;
-  margin-bottom: 15px;
-  margin-left: 15px;
+  margin: 0 15px 15px auto;
 }
 
 #show-sub-header {
