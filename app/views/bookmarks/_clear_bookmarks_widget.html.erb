@@ -1,0 +1,7 @@
+<%# Blacklight 9 uses data-turbo-method here, but this application uses rails-ujs.
+    A real form also remains functional when no JavaScript adapter is loaded. %>
+<%= button_to t('blacklight.bookmarks.clear.action_title'), clear_bookmarks_path,
+              method: :delete,
+              class: 'clear-bookmarks btn btn-danger',
+              form: { class: 'd-inline' },
+              data: { confirm: t('blacklight.bookmarks.clear.action_confirm') } %>
