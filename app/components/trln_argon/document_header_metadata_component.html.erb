@@ -1,9 +1,11 @@
-<dl>
-  <% @fields.each do |field| %>
-    <%= render field.component.new(
-          field: field,
-          show: @show,
-          layout: TrlnArgon::MetadataHeaderFieldLayoutComponent
-        ) %>
-  <% end %>
-</dl>
+<div id="show-sub-header" class="<%= show_sub_header_class %>">
+        <dl>
+          <% @fields.each do |field| %>
+            <%= render field.component.new(
+                  field: field,
+                  show: @show,
+                  layout: TrlnArgon::MetadataHeaderFieldLayoutComponent
+                ) %>
+          <% end %>
+        </dl>
+</div>
