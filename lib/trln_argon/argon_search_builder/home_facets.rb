@@ -9,9 +9,9 @@ module TrlnArgon
       end
 
       def search_parameters?
-        sf = blacklight_params[:search_field]
-        blacklight_params[:q].present? ||
-          blacklight_params[:f].present? ||
+        sf = search_state.params[:search_field]
+        search_state.params[:q].present? ||
+          search_state.params[:f].present? ||
           (sf.present? && sf != 'advanced')
       end
 

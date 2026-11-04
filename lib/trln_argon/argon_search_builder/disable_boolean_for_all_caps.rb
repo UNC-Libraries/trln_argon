@@ -6,11 +6,11 @@ module TrlnArgon
       # a copy/paste all caps query where Boolean query
       # behavior is not expected
       def disable_boolean_for_all_caps(solr_parameters)
-        return unless blacklight_params &&
-                      blacklight_params[:q].present? &&
-                      blacklight_params[:q].respond_to?(:match) &&
-                      blacklight_params[:q].match(/\s(AND|OR|NOT)\s/) &&
-                      !blacklight_params[:q].match(/[a-z]+/)
+        return unless search_state.params &&
+                      search_state.params[:q].present? &&
+                      search_state.params[:q].respond_to?(:match) &&
+                      search_state.params[:q].match(/\s(AND|OR|NOT)\s/) &&
+                      !search_state.params[:q].match(/[a-z]+/)
         solr_parameters[:q] = solr_parameters[:q].downcase
       end
     end

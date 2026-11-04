@@ -4,7 +4,7 @@
 //= require trln_argon/progressive_links.js
 //= require trln_argon/physical_media_facet.js
 //= require bootstrap
-//= require blacklight/hierarchy/hierarchy.js
+//= require trln_argon/blacklight_hierarchy.js
 //= require trln_argon/location_facet.js
 //= require trln_argon/results_count_for_toggle.js
 //= require trln_argon/google_books_preview.js

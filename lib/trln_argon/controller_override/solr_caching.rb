@@ -13,10 +13,11 @@ module SolrCaching
     @response =
       if cat_index_cache_key.present? && Rails.configuration.action_controller.perform_caching
         cache_state = 'cacheable'
-        Rails.cache.fetch(cat_index_cache_key, expires_in: solr_cache_exp_time) do
+        cached = Rails.cache.fetch(cat_index_cache_key, expires_in: solr_cache_exp_time) do
           cache_state = 'cache miss'
-          search_service.search_results
+          serialize_solr_response(search_service.search_results)
         end
+        deserialize_solr_response(cached)
       else # not cacheable
         search_service.search_results
       end
@@ -45,10 +46,11 @@ module SolrCaching
     @response =
       if adv_index_cache_key.present? && Rails.configuration.action_controller.perform_caching
         cache_state = 'cacheable'
-        Rails.cache.fetch(adv_index_cache_key, expires_in: solr_cache_exp_time) do
+        cached = Rails.cache.fetch(adv_index_cache_key, expires_in: solr_cache_exp_time) do
           cache_state = 'cache miss'
-          advanced_search_form_data
+          serialize_solr_response(advanced_search_form_data)
         end
+        deserialize_solr_response(cached)
       else # not cacheable
         advanced_search_form_data
       end
@@ -85,6 +87,21 @@ module SolrCaching
       blacklight_advanced_search_form_search_service.search_results do |builder|
         builder.except(:only_home_facets)
       end
+  end
+
+  # Response objects hold references to the HTTP connection (a socket), which
+  # can't be cached. Cache only the plain data and rebuild the response.
+  def serialize_solr_response(response)
+    {
+      data: response.to_hash,
+      request_params: response.request_params.to_hash
+    }
+  end
+
+  def deserialize_solr_response(cached)
+    Blacklight::Solr::Response.new(cached[:data],
+                                   cached[:request_params],
+                                   blacklight_config: blacklight_config)
   end
 
   def log_cache_state(cache_state, cache_key)

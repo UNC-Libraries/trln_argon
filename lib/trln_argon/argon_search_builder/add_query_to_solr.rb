@@ -21,7 +21,7 @@ module TrlnArgon
         # by actual search field config if present. We might want to remove
         # this legacy behavior at some point. It does not seem to be currently
         # rspec'd.
-        solr_parameters[:qt] = blacklight_params[:qt] if blacklight_params[:qt]
+        solr_parameters[:qt] = search_state.params[:qt] if search_state.params[:qt]
 
         if search_field
           solr_parameters[:qt] = search_field.qt
@@ -39,9 +39,9 @@ module TrlnArgon
           # Set Solr spellcheck.q to be original user-entered query, without
           # our local params, otherwise it'll try and spellcheck the local
           # params!
-          solr_parameters["spellcheck.q"] ||= blacklight_params[:q]
-        elsif blacklight_params[:q].is_a? Hash
-          q = blacklight_params[:q]
+          solr_parameters["spellcheck.q"] ||= search_state.params[:q]
+        elsif search_state.params[:q].is_a? Hash
+          q = search_state.params[:q]
           solr_parameters[:q] = if q.values.any?(&:blank?)
                                   # if any field parameters are empty, exclude _all_ results
                                   "{!lucene}NOT *:*"
@@ -53,8 +53,8 @@ module TrlnArgon
 
           solr_parameters[:defType] = 'lucene'
           solr_parameters[:spellcheck] = 'false'
-        elsif blacklight_params[:q]
-          solr_parameters[:q] = TrlnArgon::SolrEscape.escape_colon_after_space(blacklight_params[:q])
+        elsif search_state.params[:q]
+          solr_parameters[:q] = TrlnArgon::SolrEscape.escape_colon_after_space(search_state.params[:q])
         end
       end
 
@@ -74,7 +74,7 @@ module TrlnArgon
                        else
                          ''
                        end
-        solr_parameters[:q] = "{!#{q_parser}#{local_params}}#{TrlnArgon::SolrEscape.escape_colon_after_space(blacklight_params[:q])}"
+        solr_parameters[:q] = "{!#{q_parser}#{local_params}}#{TrlnArgon::SolrEscape.escape_colon_after_space(search_state.params[:q])}"
       end
     end
   end

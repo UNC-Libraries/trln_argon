@@ -8,7 +8,7 @@ module TrlnArgon
         return unless TrlnArgon::Engine.configuration.enable_query_truncation.present?
         return unless query_is_present?(solr_parameters)
 
-        case blacklight_params['search_field']
+        case search_state.params['search_field']
         when 'all_fields'
           # 10 terms, 1 will be added while truncating
           length = 9
@@ -32,14 +32,14 @@ module TrlnArgon
 
         # call number truncation occurs in the argon_call_number_search gem
         # https://github.com/trln/argon_call_number_search
-        truncate_query(solr_parameters, length) unless blacklight_params['search_field'] == 'call_number'
+        truncate_query(solr_parameters, length) unless search_state.params['search_field'] == 'call_number'
       end
       # rubocop:enable Metrics/CyclomaticComplexity
 
       private
 
       def query_is_present?(solr_parameters)
-        solr_parameters[:q].present? && blacklight_params[:q].present?
+        solr_parameters[:q].present? && search_state.params[:q].present?
       end
 
       def query_length(solr_parameters)

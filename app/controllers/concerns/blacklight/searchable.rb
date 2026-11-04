@@ -5,7 +5,6 @@
 # would be provided by Blacklight::Controller
 #  1. search_state
 #  2. blacklight_config
-#  3. search_service_class
 #
 # Additionally, the including class may override the search_service_context method to provide
 # further context to the SearchService. For example you could override this to provide the
@@ -19,10 +18,28 @@ module Blacklight::Searchable
     class_attribute :search_service_class
     self.search_service_class = Blacklight::SearchService
   end
+
   # @return [Blacklight::SearchService]
   def search_service
-    search_service_class.new(config: blacklight_config, search_state: search_state, user_params: search_state.to_h,
-**search_service_context)
+    search_service_class.new(config: blacklight_config, search_state: search_state, **search_service_context)
+  end
+
+  # This method may be overridden to customize search behavior.
+  # @return [Blacklight::Solr::Response] the solr response object
+  def retrieve_search_results
+    search_service.search_results
+  end
+
+  # This method may be overridden to customize search behavior.
+  # @return [Blacklight::Document] the solr document object
+  def retrieve_document(id)
+    search_service.fetch(id)
+  end
+
+  # This method may be overridden to customize search behavior.
+  # @return [Array<Blacklight::Document>] an array of solr document objects
+  def retrieve_documents(ids)
+    search_service.fetch(Array(ids))
   end
 
   # @return [Hash] a hash of context information to pass through to the search service

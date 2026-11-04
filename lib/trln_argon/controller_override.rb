@@ -137,7 +137,7 @@ module TrlnArgon
         config.advanced_search ||= Blacklight::OpenStructWithHashAccess.new
         config.advanced_search.enabled = true
         config.advanced_search[:url_key] ||= 'advanced'
-        config.advanced_search[:form_solr_parameters] ||= {
+        config.advanced_search[:form_solr_parameters] = {
           # NOTE: You will not get any facets back
           #       on the advanced search page
           #       unless defType is set to lucene.

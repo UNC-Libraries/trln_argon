@@ -2,22 +2,22 @@ module TrlnArgon
   module ArgonSearchBuilder
     module MinMatch
       def min_match_for_boolean(solr_parameters)
-        return unless blacklight_params &&
-                      blacklight_params[:q].present? &&
-                      blacklight_params[:q].respond_to?(:match) &&
-                      blacklight_params[:q].match(/\s(AND|OR|NOT)\s/) &&
-                      blacklight_params[:q].match(/[a-z]+/)
+        return unless search_state.params &&
+                      search_state.params[:q].present? &&
+                      search_state.params[:q].respond_to?(:match) &&
+                      search_state.params[:q].match(/\s(AND|OR|NOT)\s/) &&
+                      search_state.params[:q].match(/[a-z]+/)
         solr_parameters[:mm] = '1'
       end
 
       # Adapted from https://github.com/pulibrary/orangelight/blob/master/app/helpers/blacklight_helper.rb
       # Adapted from http://discovery-grindstone.blogspot.com/2014/01/cjk-with-solr-for-libraries-part-12.html
       def min_match_for_cjk(solr_parameters)
-        return unless blacklight_params &&
-                      blacklight_params[:q].present? &&
-                      cjk_unigrams_size(blacklight_params[:q]) > 2
+        return unless search_state.params &&
+                      search_state.params[:q].present? &&
+                      cjk_unigrams_size(search_state.params[:q]) > 2
         solr_parameters[:mm] =
-          calc_min_match_for_cjk(num_non_cjk_tokens(blacklight_params[:q]))
+          calc_min_match_for_cjk(num_non_cjk_tokens(search_state.params[:q]))
       end
 
       # Adjust min match setting for title searches with inital articles
@@ -26,8 +26,8 @@ module TrlnArgon
       def min_match_for_titles(solr_parameters)
         return unless includes_title_search?
 
-        query = blacklight_params.fetch(:q, nil) ||
-                blacklight_params.fetch('title', nil)
+        query = search_state.params.fetch(:q, nil) ||
+                search_state.params.fetch('title', nil)
 
         return unless query.present? && query.strip.match(/^(the|a|an)\s/i)
 
@@ -47,10 +47,10 @@ module TrlnArgon
       end
 
       def includes_title_search?
-        blacklight_params.key?('search_field') &&
-          ((blacklight_params['search_field'] == 'title') ||
-          (blacklight_params['search_field'] == 'advanced' &&
-          blacklight_params.fetch('title', nil).present?))
+        search_state.params.key?('search_field') &&
+          ((search_state.params['search_field'] == 'title') ||
+          (search_state.params['search_field'] == 'advanced' &&
+          search_state.params.fetch('title', nil).present?))
       end
 
       def num_non_cjk_tokens(q_param)

@@ -77,7 +77,7 @@ This is what you want to do if you are intending to customize an application usi
 2. Add Blacklight 8 and Argon to the new application's Gemfile:
 
 ```ruby
-gem 'blacklight', '~> 8.1'
+gem 'blacklight', '~> 9.2'
 gem 'trln_argon', git: 'https://github.com/UNC-Libraries/trln_argon'
 ```
 

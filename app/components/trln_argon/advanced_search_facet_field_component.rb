@@ -3,8 +3,8 @@ module TrlnArgon
     include TrlnArgon::ViewHelpers::TrlnArgonHelper
     attr_reader :facet_field, :display_facet
 
-    def initialize(facet_field:, **args)
-      super
+    def initialize(facet_field:)
+      super()
       @facet_field = facet_field
       @display_facet = facet_field&.display_facet
     end
