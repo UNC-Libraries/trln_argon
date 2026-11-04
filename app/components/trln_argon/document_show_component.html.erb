@@ -6,12 +6,12 @@
   },
   itemscope: true,
   itemtype: @document.itemtype,
-  class: classes.flatten.join(' ') do %>
+  class: 'row ' + classes.flatten.join(' ') do %>
   <%= header %>
   <% if body.present? %>
     <%= body %>
   <% else %>
-    <div class="document-main-section">
+    <div class="document-main-section col-12">
       <%= title %>
       <%= render partial: 'show_thumbnail_default', locals: { document: @document } %>
       <%= render with_sub_header %>
