@@ -1275,6 +1275,26 @@ describe TrlnArgonHelper, type: :helper do
     end
   end
 
+  describe '#sanitize_enhanced_content' do
+    let(:enhanced_content) do
+      '<div class="syndetics-copyright"><p><em>Formatted summary</em></p>'\
+        '<a href="javascript:alert(1)" onclick="alert(1)">Unsafe link</a>'\
+        '<img src="cover.jpg" onerror="alert(1)"><script>alert(1)</script>'\
+        '<svg onload="alert(1)"></svg></div>'.html_safe
+    end
+    let(:sanitized_content) { helper.sanitize_enhanced_content(enhanced_content) }
+
+    it 'preserves allowlisted formatting and attributes' do
+      expect(sanitized_content).to include(
+        '<div class="syndetics-copyright">', '<p><em>Formatted summary</em></p>'
+      )
+    end
+
+    it 'removes active content' do
+      expect(sanitized_content).not_to include('javascript:', 'onclick', 'onerror', '<script', '<svg')
+    end
+  end
+
   describe '#show_included_works_class' do
     it 'returns the HTML class attribute values' do
       expect(helper.show_included_works_class).to(

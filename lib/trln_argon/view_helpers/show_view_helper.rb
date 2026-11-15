@@ -96,6 +96,10 @@ module TrlnArgon
         display_enhanced_data?(options, :syndetics_or_marc_sample_chapter)
       end
 
+      def sanitize_enhanced_content(value)
+        sanitize(value)
+      end
+
       private
 
       def display_enhanced_data?(options, accessor)
