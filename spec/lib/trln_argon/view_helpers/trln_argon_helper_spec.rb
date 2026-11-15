@@ -944,6 +944,20 @@ describe TrlnArgonHelper, type: :helper do
         expect(result).to eq(local_note)
       end
     end
+
+    context 'when local note metadata contains markup' do
+      it 'sanitizes auto-linked action notes' do
+        result = helper.clean_and_format_links(value: ['Action note: <img src=x onerror=alert(1)>'])
+
+        expect(result).not_to include('onerror')
+      end
+
+      it 'escapes ordinary notes' do
+        result = helper.clean_and_format_links(value: ['<script>alert(1)</script>'])
+
+        expect(result).to eq('&lt;script&gt;alert(1)&lt;/script&gt;')
+      end
+    end
   end
 
   describe '#link_to_fulltext_url' do
@@ -1307,6 +1321,15 @@ describe TrlnArgonHelper, type: :helper do
             '<span class="visually-hidden">Technology -- History</span> -- Science</a>',
             '<a class="progressive-link" href="/catalog?search_field=subject&amp;q=something">'\
             'Galilei, Galileo, 1564-1642</a>'])
+      )
+    end
+
+    it 'escapes subject metadata in link labels' do
+      allow(context).to receive(:search_action_url).and_return('/catalog')
+      options = { value: ['<img src=x onerror=alert(1)>'] }
+
+      expect(context.helpers.link_to_subject_segments(options).first).to include(
+        '&lt;img src=x onerror=alert(1)&gt;'
       )
     end
   end

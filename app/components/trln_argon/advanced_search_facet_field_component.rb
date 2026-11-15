@@ -14,7 +14,11 @@ module TrlnArgon
     end
 
     def display_value(facet_item)
-      "#{facet_value_label(facet_item)}&nbsp;&nbsp;(#{number_with_delimiter facet_item.hits})".html_safe
+      safe_join([
+                  facet_value_label(facet_item),
+                  '&nbsp;&nbsp;'.html_safe,
+                  "(#{number_with_delimiter facet_item.hits})"
+                ])
     end
 
     def selected?(item)

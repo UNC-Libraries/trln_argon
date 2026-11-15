@@ -3,18 +3,20 @@ module TrlnArgon
     module SubjectsHelper
       def list_of_linked_subjects_segments(options = {})
         content_tag :ul do
-          link_to_subject_segments(options).map do |subject|
+          subjects = link_to_subject_segments(options).map do |subject|
             content_tag :li, class: options[:field] do
               progress_link_span(subject)
             end
-          end.join('').html_safe
+          end
+          safe_join(subjects)
         end
       end
 
       def list_of_linked_genres_segments(options = {})
-        link_to_subject_segments(options).map do |genre|
+        genres = link_to_subject_segments(options).map do |genre|
           progress_link_span(genre)
-        end.join('<br />').html_safe
+        end
+        safe_join(genres, '<br />'.html_safe)
       end
 
       def progress_link_span(subj)
@@ -27,15 +29,15 @@ module TrlnArgon
       end
 
       def link_to_subject_segments(options = {})
-        options[:value].map { |subject| build_segment_links(subject, options).html_safe }
+        options[:value].map { |subject| build_segment_links(subject, options) }
       end
 
       def build_segment_links(segments_string, options, delimiter = ' -- ')
         segments = segments_string.split(delimiter)
         subject_hierarchy = array_to_hierarchy(segments, delimiter)
         zipped_segments = segments.zip(subject_hierarchy)
-        linked_segments = zipped_segments.map { |segment| segment_search_link(segment, options, delimiter) }.join
-        linked_segments
+        linked_segments = zipped_segments.map { |segment| segment_search_link(segment, options, delimiter) }
+        safe_join(linked_segments)
       end
 
       def segment_search_link(segment_hierarchy_pair, options, delimiter = ' -- ')
@@ -47,7 +49,7 @@ module TrlnArgon
         params = { search_field: search_field, q: "\"#{segment_hierarchy_pair.last}\"" }
         link_to(search_action_url(params),
                 class: 'progressive-link') do
-          segment_link_content(segment_hierarchy_pair, delimiter).html_safe
+          segment_link_content(segment_hierarchy_pair, delimiter)
         end
       end
 
@@ -59,7 +61,7 @@ module TrlnArgon
                                 class: 'visually-hidden')
           apply_delim = delimiter
         end
-        "#{sr_span}#{apply_delim}#{segment_hierarchy_pair.first}"
+        safe_join([sr_span, apply_delim, segment_hierarchy_pair.first].compact)
       end
 
       def array_to_hierarchy(args, delimiter = ' -- ')
