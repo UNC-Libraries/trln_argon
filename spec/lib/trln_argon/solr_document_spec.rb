@@ -346,6 +346,22 @@ describe TrlnArgon::SolrDocument do
         )
       end
     end
+
+    context 'field contains a dangerous URL scheme' do
+      let(:solr_document) do
+        SolrDocumentTestClass.new(
+          id: 'DUKE12345',
+          url_a: ['{"href":"javascript:alert(1)","type":"fulltext"}',
+                  '{"href":"ftp://example.com/file","type":"fulltext"}']
+        )
+      end
+
+      it 'rejects the dangerous URL and preserves other schemes' do
+        expect(solr_document.urls).to(
+          eq([{ href: 'ftp://example.com/file', type: 'fulltext', text: '', note: '' }])
+        )
+      end
+    end
   end
 
   describe 'fulltext_urls' do

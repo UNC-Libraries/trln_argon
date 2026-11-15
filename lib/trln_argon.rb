@@ -19,6 +19,7 @@ module TrlnArgon
   autoload :SyndeticsData, 'trln_argon/syndetics_data'
   autoload :TrlnControllerBehavior, 'trln_argon/trln_controller_behavior'
   autoload :TrlnSolrDocument, 'trln_argon/trln_solr_document'
+  autoload :UrlSafety, 'trln_argon/url_safety'
   autoload :User, 'trln_argon/user.rb'
   autoload :ViewHelpers, 'trln_argon/view_helpers'
   autoload :HTTPFetch, 'trln_argon/http_fetch.rb'

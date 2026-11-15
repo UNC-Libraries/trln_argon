@@ -915,6 +915,12 @@ describe TrlnArgonHelper, type: :helper do
            '<a href="http://link.to.toc.or.something.">Table of contents.</a>')
       )
     end
+
+    it 'omits secondary URLs with dangerous schemes' do
+      options[:value].prepend(href: 'javascript:alert(1)', type: 'other', text: 'Unsafe')
+
+      expect(helper.link_to_secondary_urls(options)).not_to include('javascript:', 'Unsafe')
+    end
   end
 
   describe '#clean_and_format_links' do
@@ -1106,6 +1112,24 @@ describe TrlnArgonHelper, type: :helper do
           '<i class="fa fa-external-link" aria-hidden="true"></i>'\
           'Open Access</a>')
       )
+    end
+  end
+
+  describe 'dangerous metadata URLs' do
+    let(:url_hash) do
+      { href: 'javascript:alert(1)', type: 'fulltext', text: 'Unsafe' }
+    end
+
+    it 'does not create primary links' do
+      links = [
+        helper.link_to_fulltext_url(url_hash),
+        helper.link_to_expanded_fulltext_url(url_hash, 'unc'),
+        helper.link_to_finding_aid(url_hash),
+        helper.link_to_open_access(url_hash),
+        helper.expanded_link_to_open_access(url_hash)
+      ]
+
+      expect(links).to all be_nil
     end
   end
 
