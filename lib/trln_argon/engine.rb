@@ -44,8 +44,7 @@ module TrlnArgon
                     :solr_cache_exp_time,
                     :allow_open_search,
                     :open_search_q_min_length,
-                    :enable_query_truncation,
-                    :allow_tracebacks
+                    :enable_query_truncation
 
       # rubocop:disable Metrics/MethodLength
       # rubocop:disable Layout/LineLength
@@ -79,7 +78,6 @@ module TrlnArgon
         @allow_open_search = 'true'
         @open_search_q_min_length = '4'
         @enable_query_truncation = ''
-        @allow_tracebacks = ''
       end
       # rubocop:enable Metrics/MethodLength
       # rubocop:enable Layout/LineLength

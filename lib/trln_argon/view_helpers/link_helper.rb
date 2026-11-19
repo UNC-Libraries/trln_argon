@@ -7,7 +7,9 @@ module TrlnArgon
 
       # Other and related links
       def link_to_secondary_urls(options = {})
-        options[:value].map do |url|
+        options[:value].filter_map do |url|
+          next unless safe_metadata_url?(url)
+
           link_text = if url[:text].present? || url[:note].present?
                         [url[:text], url[:note]].compact.reject(&:empty?)
                       else
@@ -19,18 +21,20 @@ module TrlnArgon
 
       # Make 583$u clickable
       def clean_and_format_links(options = {})
-        options.fetch(:value, []).map do |v|
+        values = options.fetch(:value, []).map do |v|
           if v.include?('Action note')
-            auto_linked_value = auto_link(v, sanitize: false)
-            auto_linked_value.html_safe
+            auto_link(v)
           else
             v
           end
-        end.join('<br/>').html_safe
+        end
+        safe_join(values, '<br/>'.html_safe)
       end
 
       # Full Text Links -- for Local View
       def link_to_fulltext_url(url_hash)
+        return unless safe_metadata_url?(url_hash)
+
         inst = TrlnArgon::Engine.configuration.local_institution_code
         link_to(url_hash[:href],
                 class: "link-type-#{url_hash[:type]} link-restricted-#{inst}",
@@ -47,6 +51,8 @@ module TrlnArgon
       # Full Text Expanded Links -- for TRLN View
       def link_to_expanded_fulltext_url(url_hash, inst)
         return if url_hash[:href].blank?
+        return unless safe_metadata_url?(url_hash)
+
         link_to(url_hash[:href],
                 class: "link-type-#{url_hash[:type]} link-restricted-#{inst}",
                 target: '_blank') do
@@ -62,6 +68,8 @@ module TrlnArgon
 
       # Finding Aid Links
       def link_to_finding_aid(url_hash)
+        return unless safe_metadata_url?(url_hash)
+
         link_to(url_hash[:href], class: "link-type-#{url_hash[:type]}", target: '_blank') do
           '<i class="fa fa-archive" aria-hidden="true"></i>'.html_safe + finding_aid_link_text(url_hash)
         end
@@ -74,6 +82,8 @@ module TrlnArgon
 
       # Open Access Links
       def link_to_open_access(url_hash)
+        return unless safe_metadata_url?(url_hash)
+
         link_to(url_hash[:href], class: "link-type-#{url_hash[:type]} link-open-access", target: '_blank') do
           '<i class="fa fa-external-link" aria-hidden="true"></i>'.html_safe + open_access_link_text(url_hash)
         end
@@ -86,6 +96,8 @@ module TrlnArgon
 
       # Expanded View Open Access Links
       def expanded_link_to_open_access(url_hash)
+        return unless safe_metadata_url?(url_hash)
+
         link_to(url_hash[:href], class: "link-type-#{url_hash[:type]} link-open-access", target: '_blank') do
           '<i class="fa fa-external-link" aria-hidden="true"></i>'.html_safe + expanded_open_access_link_text
         end
@@ -111,6 +123,12 @@ module TrlnArgon
       def display_expanded_links?(document, inst)
         document.all_shared_and_local_fulltext_urls_by_inst.fetch(inst, []).to_a.any? ||
           document.all_open_access_urls_by_inst.fetch(inst, []).to_a.any?
+      end
+
+      private
+
+      def safe_metadata_url?(url_hash)
+        TrlnArgon::UrlSafety.allowed_scheme?(url_hash[:href])
       end
     end
   end

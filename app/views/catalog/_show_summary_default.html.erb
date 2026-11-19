@@ -7,7 +7,7 @@
       <h2 id="summaryLabel"><%= t('trln_argon.show.heading.summary') %></h2>
 
       <div class="content expandable-content">
-        <%= @document.syndetics_or_marc_summary.html_safe %>
+        <%= sanitize_enhanced_content(@document.syndetics_or_marc_summary) %>
       </div>
 
       <div class="expandable-content-controls">
@@ -26,7 +26,7 @@
       <h2 id="contentsLabel"><%= t('trln_argon.show.heading.contents') %></h2>
 
       <div class="content expandable-content">
-        <%= @document.syndetics_or_marc_toc.html_safe %>
+        <%= sanitize_enhanced_content(@document.syndetics_or_marc_toc) %>
       </div>
 
       <div class="expandable-content-controls">
@@ -43,7 +43,7 @@
     <h2 id="sampleChapterLabel"><%= t('trln_argon.show.heading.sample_chapter') %></h2>
 
     <div class='content expandable-content'>
-      <%= @document.syndetics_or_marc_sample_chapter.html_safe %>
+      <%= sanitize_enhanced_content(@document.syndetics_or_marc_sample_chapter) %>
     </div>
 
     <div class="expandable-content-controls">

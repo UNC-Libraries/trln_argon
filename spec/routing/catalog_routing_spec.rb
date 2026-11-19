@@ -8,4 +8,8 @@ describe 'Routing' do
       route_to(controller: 'catalog', action: 'show', id: 'NCSU3724376')
     )
   end
+
+  it 'does not expose application logs' do
+    expect(get: '/logs').not_to be_routable
+  end
 end

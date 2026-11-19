@@ -25,7 +25,6 @@ TrlnArgon::Engine.configure do |config|
   apply_local_configuration(config, 'allow_open_search')
   apply_local_configuration(config, 'open_search_q_min_length')
   apply_local_configuration(config, 'enable_query_truncation')
-  apply_local_configuration(config, 'allow_tracebacks')
 
   mappings_dir = File.join(config.argon_code_mappings_dir.to_s, 'argon_mappings')
   TrlnArgon::LookupManager.fetcher = TrlnArgon::MappingsGitFetcher.new(repo_dir: mappings_dir)

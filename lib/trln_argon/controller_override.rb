@@ -749,17 +749,6 @@ module TrlnArgon
       def render_sharebookmarks_action?(_config, _options)
         true if request.path == bookmarks_path
       end
-
-      def log_params
-        params.permit(:lines)
-      end
-
-      def logs
-        return unless TrlnArgon::Engine.configuration.allow_tracebacks.present?
-        lines = log_params.fetch(:lines, 50)
-        return unless lines.to_s.match(/\d+/)
-        @logs = `tail -n #{lines} log/#{Rails.env}.log`
-      end
     end
   end
 end

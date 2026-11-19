@@ -915,6 +915,12 @@ describe TrlnArgonHelper, type: :helper do
            '<a href="http://link.to.toc.or.something.">Table of contents.</a>')
       )
     end
+
+    it 'omits secondary URLs with dangerous schemes' do
+      options[:value].prepend(href: 'javascript:alert(1)', type: 'other', text: 'Unsafe')
+
+      expect(helper.link_to_secondary_urls(options)).not_to include('javascript:', 'Unsafe')
+    end
   end
 
   describe '#clean_and_format_links' do
@@ -936,6 +942,20 @@ describe TrlnArgonHelper, type: :helper do
         options = { value: [local_note] }
         result = helper.clean_and_format_links(options)
         expect(result).to eq(local_note)
+      end
+    end
+
+    context 'when local note metadata contains markup' do
+      it 'sanitizes auto-linked action notes' do
+        result = helper.clean_and_format_links(value: ['Action note: <img src=x onerror=alert(1)>'])
+
+        expect(result).not_to include('onerror')
+      end
+
+      it 'escapes ordinary notes' do
+        result = helper.clean_and_format_links(value: ['<script>alert(1)</script>'])
+
+        expect(result).to eq('&lt;script&gt;alert(1)&lt;/script&gt;')
       end
     end
   end
@@ -1109,6 +1129,24 @@ describe TrlnArgonHelper, type: :helper do
     end
   end
 
+  describe 'dangerous metadata URLs' do
+    let(:url_hash) do
+      { href: 'javascript:alert(1)', type: 'fulltext', text: 'Unsafe' }
+    end
+
+    it 'does not create primary links' do
+      links = [
+        helper.link_to_fulltext_url(url_hash),
+        helper.link_to_expanded_fulltext_url(url_hash, 'unc'),
+        helper.link_to_finding_aid(url_hash),
+        helper.link_to_open_access(url_hash),
+        helper.expanded_link_to_open_access(url_hash)
+      ]
+
+      expect(links).to all be_nil
+    end
+  end
+
   ########################
   # NamesHelper
   ########################
@@ -1237,6 +1275,26 @@ describe TrlnArgonHelper, type: :helper do
     end
   end
 
+  describe '#sanitize_enhanced_content' do
+    let(:enhanced_content) do
+      '<div class="syndetics-copyright"><p><em>Formatted summary</em></p>'\
+        '<a href="javascript:alert(1)" onclick="alert(1)">Unsafe link</a>'\
+        '<img src="cover.jpg" onerror="alert(1)"><script>alert(1)</script>'\
+        '<svg onload="alert(1)"></svg></div>'.html_safe
+    end
+    let(:sanitized_content) { helper.sanitize_enhanced_content(enhanced_content) }
+
+    it 'preserves allowlisted formatting and attributes' do
+      expect(sanitized_content).to include(
+        '<div class="syndetics-copyright">', '<p><em>Formatted summary</em></p>'
+      )
+    end
+
+    it 'removes active content' do
+      expect(sanitized_content).not_to include('javascript:', 'onclick', 'onerror', '<script', '<svg')
+    end
+  end
+
   describe '#show_included_works_class' do
     it 'returns the HTML class attribute values' do
       expect(helper.show_included_works_class).to(
@@ -1283,6 +1341,15 @@ describe TrlnArgonHelper, type: :helper do
             '<span class="visually-hidden">Technology -- History</span> -- Science</a>',
             '<a class="progressive-link" href="/catalog?search_field=subject&amp;q=something">'\
             'Galilei, Galileo, 1564-1642</a>'])
+      )
+    end
+
+    it 'escapes subject metadata in link labels' do
+      allow(context).to receive(:search_action_url).and_return('/catalog')
+      options = { value: ['<img src=x onerror=alert(1)>'] }
+
+      expect(context.helpers.link_to_subject_segments(options).first).to include(
+        '&lt;img src=x onerror=alert(1)&gt;'
       )
     end
   end

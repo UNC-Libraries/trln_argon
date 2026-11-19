@@ -69,7 +69,9 @@ module TrlnArgon
       def deserialized_urls
         deserialize_solr_field(TrlnArgon::Fields::URLS,
                                { href: '', type: '', text: '', note: '' },
-                               :href)
+                               :href).select do |url|
+          TrlnArgon::UrlSafety.allowed_scheme?(url[:href])
+        end
       end
 
       def inst_urls_pairs(urls, inst)

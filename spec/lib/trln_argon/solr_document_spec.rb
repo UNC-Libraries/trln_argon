@@ -65,6 +65,23 @@ describe TrlnArgon::SolrDocument do
     end
   end
 
+  describe 'MARC enhanced content' do
+    let(:document) do
+      SolrDocumentTestClass.new(
+        note_summary_a: ['Summary <em>with markup</em>'],
+        note_toc_a: ['Contents <img src=x onerror=alert(1)>']
+      )
+    end
+
+    it 'escapes summary values while preserving paragraph markup' do
+      expect(document.marc_summary).to eq('<p>Summary &lt;em&gt;with markup&lt;/em&gt;</p>')
+    end
+
+    it 'escapes table-of-contents values while preserving paragraph markup' do
+      expect(document.marc_toc).to eq('<p>Contents &lt;img src=x onerror=alert(1)&gt;</p>')
+    end
+  end
+
   describe 'names' do
     let(:names_document) do
       SolrDocumentTestClass.new(
@@ -343,6 +360,22 @@ describe TrlnArgon::SolrDocument do
       it 'deserializes each of the parsable URL entries and rejects unparsable values' do
         expect(solr_document.urls).to(
           eq([{ href: 'http://purl.access.gpo.gov/GPO/LPS606', type: 'fulltext', text: '', note: '' }])
+        )
+      end
+    end
+
+    context 'field contains a dangerous URL scheme' do
+      let(:solr_document) do
+        SolrDocumentTestClass.new(
+          id: 'DUKE12345',
+          url_a: ['{"href":"javascript:alert(1)","type":"fulltext"}',
+                  '{"href":"ftp://example.com/file","type":"fulltext"}']
+        )
+      end
+
+      it 'rejects the dangerous URL and preserves other schemes' do
+        expect(solr_document.urls).to(
+          eq([{ href: 'ftp://example.com/file', type: 'fulltext', text: '', note: '' }])
         )
       end
     end
@@ -643,7 +676,7 @@ describe TrlnArgon::SolrDocument do
           ': Charlotte, N.C. : Advancment Studies, CPCC<br />'\
           'Summer 2000-summer 2001: Charlotte, N.C. : English Dept., CPCC<br />'\
           'Fall/Winter 2002-: Savannah, GA : Dept. of Languages, '\
-          'Literature & Philosophy, Armstrong Atlantic State University')
+          'Literature &amp; Philosophy, Armstrong Atlantic State University')
         )
       end
     end
@@ -653,6 +686,21 @@ describe TrlnArgon::SolrDocument do
         expect(imprint_document.imprint_main_to_text).to(
           eq(['Fall/Winter 2002-: Savannah, GA : Dept. of Languages, Literature & Philosophy, '\
               'Armstrong Atlantic State University'])
+        )
+      end
+    end
+
+    context 'when imprint metadata contains markup' do
+      let(:unsafe_imprint_document) do
+        SolrDocumentTestClass.new(
+          imprint_multiple_a: ['{"type":"publication","label":"<1972>",'\
+                               '"value":"<img src=x onerror=alert(1)>"}']
+        )
+      end
+
+      it 'preserves angle brackets as text and escapes executable markup' do
+        expect(unsafe_imprint_document.imprint_multiple_for_display).to(
+          eq('&lt;1972&gt;: &lt;img src=x onerror=alert(1)&gt;')
         )
       end
     end
